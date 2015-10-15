@@ -33,8 +33,20 @@ struct PTINFO
 //Master Boot Record structure
 struct MBR
 {
-	uint8 bootcode[0x1be];	// boot sector
-	PTINFO ptable[4];			// four partition table structures
+	char far_jmp_start[5];
+	char bootdrv;
+	uint32 boot_loader_main;
+	struct
+	{
+		byte			size;
+		byte			zero;
+		uint16		bootldr_sectors;
+		uint16		bootldr_offset;
+		uint16		bootldr_segment;
+		uint64		bootldr_start_sector;
+	}Disk_Address_Packet;
+	char boot_code[0x1be - 5 - 1 - 4 - 16];
+	PTINFO partition_table[4];
 	uint8 sig_0x55;				// 0x55 signature byte
 	uint8 sig_0xaa;				// 0xaa signature byte
 };
@@ -112,23 +124,39 @@ struct FILE_OBJECT
 	uint32 cache_offset;
 	uint8  cache_buf[SECTOR_SIZE];
 };
-
-
-byte inportb(uint16 port);
-void outportb(uint16 port, byte val);
-bool	read_sectors(void* sec_buf, uint32 first_sector, int total_secs);
-int get_part_name(const char* pathname, char * part_name_buf, int buf_size);
-uint32 cluster_to_LBA(uint32 cluster);
-int    copy_short_name(FAT32_DIR_ENTRY* dir_entry, char* short_name);
-int    strcmp_nocase(const char* str1, const char * str2);
-bool   search_dir_entry(const char* entry_name, uint32& start_cluster, uint32 &file_size);
-bool	   open_file(FILE_OBJECT *file, const char* filename);
-uint32 load_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize);
-
-#pragma intrinsic (memcpy) 
-extern "C" void* memcpy(void* destination, const void* source, size_t num);
-
-extern "C" void * __cdecl memset(void *mem, int value, size_t count);
-#pragma intrinsic (memset) 
-
 #pragma pack(pop)
+
+byte		inportb(uint16 port);
+void		outportb(uint16 port, byte val);
+bool		read_sectors(void* sec_buf, uint32 first_sector, int total_secs);
+
+class FAT32
+{
+private:
+	byte    m_driver;
+	uint32  m_volume_start_sector;
+	uint32	m_fat_start_sector;
+	uint32	m_cluster_start_sector;
+	uint32	m_sectors_per_cluster;
+	uint32	m_rootdir_start_cluster;
+	
+public:
+	FAT32();
+	~FAT32() {}
+
+	bool		Init(byte  driver, uint32 volume_start_sector);
+	int		get_part_name(const char* pathname, char * part_name_buf, int buf_size);
+	uint32	cluster_to_LBA(uint32 cluster);
+	int		copy_short_name(FAT32_DIR_ENTRY* dir_entry, char* short_name);
+	int		strcmp_nocase(const char* str1, const char * str2);
+	bool		search_dir_entry(const char* entry_name, uint32& start_cluster, uint32 &file_size);
+	bool		open_file(FILE_OBJECT *file, const char* filename);
+	uint32	load_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize);
+};
+
+#pragma intrinsic (memset) 
+#pragma intrinsic (memcpy) 
+
+extern "C" void* memcpy(void* destination, const void* source, size_t num);
+extern "C" void * __cdecl memset(void *mem, int value, size_t count);
+
