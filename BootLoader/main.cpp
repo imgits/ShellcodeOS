@@ -7,6 +7,7 @@
 #else
 #include "vga.h"
 #include "acpi.h"
+#include "pe.h"
 #endif
 
 char    kernel_loader[256] = "\\boot\\osldr.exe";
@@ -89,10 +90,9 @@ int main(memory_map* mem_map, int32 count)
 		__asm jmp $
 	}
 	printf("Load Osloader OK\n");
-	AcpiInit();
-	PIMAGE_DOS_HEADER dos_hdr = (PIMAGE_DOS_HEADER)kernel_buf;
-	PIMAGE_NT_HEADERS pe_hdr = (PIMAGE_NT_HEADERS)((char*)kernel_buf + dos_hdr->e_lfanew);
-	uint32 EntryPoint = pe_hdr->OptionalHeader.ImageBase + pe_hdr->OptionalHeader.AddressOfEntryPoint;
+	//AcpiInit();
+	PE pe(kernel_buf);
+	byte* EntryPoint = pe.EntryPoint();
 	__asm mov eax, EntryPoint
 	__asm jmp eax
 	return 0;

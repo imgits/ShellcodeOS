@@ -17,20 +17,33 @@ void   init_page_frame_database(uint64 memsize)
 	g_page_frame_min = 0x100000 >> 12;
 	g_page_frame_max = memsize >> 12;
 
+	//分配页目录帧
 	g_page_dir = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
-	g_page_table_0x000000000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
-	g_page_table_0x800000000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
-	g_page_table_0xC00400000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
-
 	memset(g_page_dir, 0, PAGE_SIZE);
 	g_page_dir[PD_INDEX(PAGE_TABLE_BASE)] = (uint32)g_page_dir | PT_PRESENT | PT_WRITABLE;
-	g_page_dir[PD_INDEX(0x00000000)] = (uint32)g_page_table_0x000000000 | PT_PRESENT | PT_WRITABLE;
-	g_page_dir[PD_INDEX(PAGE_FRAME_BASE)] = (uint32)g_page_table_0xC00400000 | PT_PRESENT | PT_WRITABLE;
 
-	for (int32 i = 0; i < 1024; i++)
+	//分配页表，用于映射PA_0x00000000~0x000fffff ==> VA_0x00000000~0x000fffff
+	g_page_table_0x000000000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
+	g_page_dir[PD_INDEX(0x00000000)] = (uint32)g_page_table_0x000000000 | PT_PRESENT | PT_WRITABLE;
+	memset(g_page_table_0x000000000, 0, PAGE_SIZE);
+	for (int32 i = 0; i < 256; i++)
 	{
 		g_page_table_0x000000000[i] = (i * PAGE_SIZE) | PT_PRESENT | PT_WRITABLE;
 	}
+
+	//分配页表，用于映射内核代码至VA_0x80000000~....
+	//g_page_table_0x800000000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
+
+	//分配页表
+	//映射page_frame_database至VA_0xC00400000~C004fffff(1M)
+	//映射PA_0x00000000~0x000fffff至VA_0xC00500000~C005fffff(1M)
+	g_page_table_0xC00400000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
+
+	
+	
+	
+	g_page_dir[PD_INDEX(PAGE_FRAME_BASE)] = (uint32)g_page_table_0xC00400000 | PT_PRESENT | PT_WRITABLE;
+
 
 	uint32 physical_pages = g_page_frame_max;
 	uint32 database_pages = (physical_pages / 8 / 0x1000) + 1;
