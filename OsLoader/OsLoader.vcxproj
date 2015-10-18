@@ -84,6 +84,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="acpi.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mmu.cpp" />
   </ItemGroup>
@@ -93,6 +94,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="acpi.h" />
     <ClInclude Include="mmu.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

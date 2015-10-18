@@ -108,9 +108,12 @@ class GDT
 {
 private:
 	segment m_gdt[GDT_MAX];
+
+private:
+	void init_seg(struct segment *seg, unsigned long addr, unsigned long size, int access, int granularity);
 public:
 	GDT();
 	~GDT();
-	void init_seg(struct segment *seg, unsigned long addr, unsigned long size, int access, int granularity);
+	void Init();
 };
 

@@ -21,9 +21,15 @@
     <ClCompile Include="mmu.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="acpi.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmu.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="acpi.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

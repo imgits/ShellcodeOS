@@ -93,7 +93,6 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="acpi.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="gdt.cpp" />
     <ClCompile Include="idt.cpp" />
@@ -110,7 +109,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="acpi.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="gdt.h" />
     <ClInclude Include="idt.h" />

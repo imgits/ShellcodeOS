@@ -77,7 +77,7 @@ void*   init_page_frame_database(uint64 memsize)
 
 uint32  alloc_page_frame()
 {
-	uint32 page_addr = g_page_frame_min*PAGE_SIZE;
+	uint32 page_addr = g_page_frame_min * PAGE_SIZE;
 	g_page_frame_min ++;
 	return page_addr;
 }

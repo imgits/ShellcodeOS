@@ -7,6 +7,7 @@
 #include "mmu.h"
 #include "fat32.h"
 #include "pe.h"
+#include "acpi.h"
 
 char    os_kernel[256] = "\\os\\scos.exe";
 
@@ -44,11 +45,16 @@ uint32 load_kernel()
 	return file.size;
 }
 
+ACPI  acpi;
 void	main(uint64 memsize)
 {
 	printf("\nmemsize=%llX\n", memsize);
 	puts("Hello world\n", 10);
 	puts("OsLoader.exe is starting...\n", 10);
+
+	ACPI  acpi;
+
+	acpi.Init();
 
 	//初始化页帧数据库
 	void* page_dir = init_page_frame_database(memsize);
