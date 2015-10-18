@@ -33,12 +33,39 @@
     <ClCompile Include="aulldvrm_asm.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="fat32.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pe.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="c++.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="liballoc.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vsprintf.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vga.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Fat32.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="c++.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="liballoc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdio.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

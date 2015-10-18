@@ -36,6 +36,7 @@
 #include <ntdef.h>
 #include <string.h>
 
+
 #define NDEBUG
 //#include <debug.h>
 
@@ -907,4 +908,5 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	*str = '\0';
 	return str-buf;
 }
+
 

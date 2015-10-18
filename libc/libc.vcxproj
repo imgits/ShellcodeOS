@@ -80,12 +80,21 @@
   <ItemGroup>
     <ClCompile Include="alldvrm_asm.c" />
     <ClCompile Include="aulldvrm_asm.c" />
+    <ClCompile Include="c++.cpp" />
+    <ClCompile Include="fat32.cpp" />
     <ClCompile Include="isxdigit.c" />
+    <ClCompile Include="liballoc.c" />
+    <ClCompile Include="pe.cpp" />
     <ClCompile Include="string.c" />
     <ClCompile Include="vga.cpp" />
     <ClCompile Include="vsprintf.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="c++.h" />
+    <ClInclude Include="Fat32.h" />
+    <ClInclude Include="liballoc.h" />
+    <ClInclude Include="pe.h" />
+    <ClInclude Include="stdio.h" />
     <ClInclude Include="vga.h" />
     <ClInclude Include="vsprintf.h" />
   </ItemGroup>

@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslibc", "libc\libc.vcxproj
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BootLoader", "BootLoader\BootLoader.vcxproj", "{E2A17AAB-A7F7-4181-9A45-54B5F9EA67A4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OS", "OS\Os.vcxproj", "{49AD412A-CA15-442E-9A98-23C81A7A057F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -33,6 +35,10 @@ Global
 		{E2A17AAB-A7F7-4181-9A45-54B5F9EA67A4}.Debug|Win32.Build.0 = Debug|Win32
 		{E2A17AAB-A7F7-4181-9A45-54B5F9EA67A4}.Release|Win32.ActiveCfg = Release|Win32
 		{E2A17AAB-A7F7-4181-9A45-54B5F9EA67A4}.Release|Win32.Build.0 = Release|Win32
+		{49AD412A-CA15-442E-9A98-23C81A7A057F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{49AD412A-CA15-442E-9A98-23C81A7A057F}.Debug|Win32.Build.0 = Debug|Win32
+		{49AD412A-CA15-442E-9A98-23C81A7A057F}.Release|Win32.ActiveCfg = Release|Win32
+		{49AD412A-CA15-442E-9A98-23C81A7A057F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

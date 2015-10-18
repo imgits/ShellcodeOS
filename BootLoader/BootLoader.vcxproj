@@ -86,7 +86,7 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
       <AdditionalDependencies>oslibc.lib</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-      <OutputFile>../bin/$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>../bin/BootLdr.exe</OutputFile>
       <Driver>NotSet</Driver>
       <AdditionalOptions> /filealign:0x1000 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>$(SolutionDir)\release;</AdditionalLibraryDirectories>
@@ -95,14 +95,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="acpi.cpp" />
-    <ClCompile Include="fat32.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="acpi.h" />
-    <ClInclude Include="fat32.h" />
-    <ClInclude Include="pe.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="boot.asm">

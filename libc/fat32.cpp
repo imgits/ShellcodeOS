@@ -1,5 +1,6 @@
 #include "Fat32.h"
 #include "ioport.h"
+#include "vga.h"
 
 #ifdef _DEBUG
 bool	read_sectors(void* sec_buf, uint32 first_sector, int total_secs)
@@ -66,9 +67,6 @@ bool FAT32::Init(byte  driver, uint32 volume_start_sector)
 	m_rootdir_start_cluster = fat32_boot.fat32_root_cluster;
 	return true;
 }
-
-
-
 
 int 	 FAT32::get_part_name(const char* pathname, char * part_name_buf, int buf_size)
 {
@@ -237,6 +235,8 @@ uint32 	 FAT32::load_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize)
 	{
 		return -1;
 	}
+	//printf("FAT32::load_file 0\n");
+	
 	uint32 next_cluster = file->start_cluster;
 	uint8* pbuf = (uint8*)filebuf;
 	uint32 last_fat_sector = -1;
@@ -244,13 +244,16 @@ uint32 	 FAT32::load_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize)
 	uint32 read_sector_count = 0;
 	do
 	{
+		//printf("FAT32::load_file 1\n");
 		uint32 cluster_sector = cluster_to_LBA(next_cluster);
 		for (int i = 0;
 		(i < m_sectors_per_cluster) && (read_sector_count < file_sectors);
 			i++, read_sector_count++, pbuf += SECTOR_SIZE)
 		{
+			//printf("FAT32::load_file pbuf=%08X\n", pbuf);
 			read_sectors(pbuf, cluster_sector + i, 1);
 		}
+		//printf("FAT32::load_file 2\n");
 		uint32 fat_sector = m_fat_start_sector + (next_cluster * 4) / SECTOR_SIZE;
 		uint32 fat_offset = (next_cluster * 4) % SECTOR_SIZE;
 		if (last_fat_sector != fat_sector)
@@ -258,9 +261,10 @@ uint32 	 FAT32::load_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize)
 			read_sectors(fat_buf, fat_sector, 1);
 			last_fat_sector = fat_sector;
 		}
+		//printf("FAT32::load_file 3\n");
 		next_cluster = *(uint32*)(fat_buf + fat_offset);
 	} while ((next_cluster < 0x0ffffff7) && (read_sector_count < file_sectors));
-
+	//printf("FAT32::load_file 4\n");
 	if ((read_sector_count != file_sectors) ||
 		(next_cluster < 0x0ffffff7))
 	{

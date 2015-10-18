@@ -127,7 +127,7 @@ void puts(const char* str, char fore, char back)
 	for (int i = 0; i < len; i++) putc(str[i], fore, back);
 }
 
-extern "C" int __cdecl vsprintf(char *buf, const char *fmt, va_list args);
+#include "stdio.h"
 int __cdecl printf(const char *fmt, ...)
 {
 	char buf[1024];
@@ -138,7 +138,7 @@ int __cdecl printf(const char *fmt, ...)
 	va_end(args);
 	if (len > sizeof(buf)) len = sizeof(buf) - 1;
 	buf[len] = 0;
-	puts(buf);
+	puts(buf, 15, 0);
 	return len;
 }
 

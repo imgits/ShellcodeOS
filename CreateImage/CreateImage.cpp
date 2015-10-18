@@ -95,9 +95,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (vhd.Open(argv[1]) &&
 		vhd.Attach())
 	{
-		Sleep(1000);
+		Sleep(100);
 		BOOL ret = CopyFile(argv[4], argv[5], false);
-		if (ret) return 0;
+		if (ret)
+		{
+			ret = CopyFile(argv[6], argv[7], false);
+			if (ret) return 0;
+		}
 	}
 
 	return 0;

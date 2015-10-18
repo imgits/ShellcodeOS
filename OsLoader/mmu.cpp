@@ -1,168 +1,108 @@
 #include "mmu.h"
 #include <string.h>
+#include "stdio.h"
 
-//4G = 1M*4K = 8*128K*4K = 8*32*4K*4K
-static byte*		g_page_frame_bitmap = NULL;
-static uint32	g_page_frame_min = 0;
-static uint32	g_page_frame_max = 0;
-static uint32	g_next_free_page = 0;
-static uint32*   g_page_dir = (uint32*)PAGE_DIR_PHYSICAL_ADDRESS;
-static uint32*   g_page_table_0_4M = (uint32*)NULL;
-static uint32*   g_page_table_0x000000000 = (uint32*)NULL;
-static uint32*   g_page_table_0x800000000 = (uint32*)NULL;
-static uint32*   g_page_table_0xC00400000 = (uint32*)NULL;
+byte*	g_page_frame_database = (byte*)PAGE_FRAME_BASE;
+uint32	g_page_frame_min = 0;
+uint32	g_page_frame_max = 0;
+uint32*  g_page_dir = (uint32*)NULL;
 
-void   init_page_frame_database(uint64 memsize)
+void*   init_page_frame_database(uint64 memsize)
 {
-	g_page_frame_min = 0x100000 >> 12;
-	g_page_frame_max = memsize >> 12;
+	g_page_frame_min = PAGE_FRAME_INDEX(0x100000);
+	g_page_frame_max = PAGE_FRAME_INDEX(memsize);
+
+	printf("g_page_frame_min=%x\n", g_page_frame_min);
+	printf("g_page_frame_max=%x\n", g_page_frame_max);
 
 	//分配页目录帧
-	g_page_dir = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
+	//也可以理解为分配虚拟地址映射页表(0xC0000000~0xC03fffff)
+	//自映射到0xC0300000 = 0xC0000000 + (0xC0000000>>12)
+	g_page_dir = (uint32*)alloc_page_frame();
+
 	memset(g_page_dir, 0, PAGE_SIZE);
 	g_page_dir[PD_INDEX(PAGE_TABLE_BASE)] = (uint32)g_page_dir | PT_PRESENT | PT_WRITABLE;
 
-	//分配页表，用于映射PA_0x00000000~0x000fffff ==> VA_0x00000000~0x000fffff
-	g_page_table_0x000000000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
-	g_page_dir[PD_INDEX(0x00000000)] = (uint32)g_page_table_0x000000000 | PT_PRESENT | PT_WRITABLE;
-	memset(g_page_table_0x000000000, 0, PAGE_SIZE);
+	printf("g_page_dir=%08X\n", g_page_dir);
+
+	//分配虚拟地址映射页表(0x00000000~0x003fffff)
+	//用于映射PA_0x00000000~0x000fffff ==> VA_0x00000000~0x000fffff
+	uint32* page_table = (uint32*)alloc_page_frame();
+	g_page_dir[PD_INDEX(0x00000000)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+	memset(page_table, 0, PAGE_SIZE);
 	for (int32 i = 0; i < 256; i++)
-	{
-		g_page_table_0x000000000[i] = (i * PAGE_SIZE) | PT_PRESENT | PT_WRITABLE;
+	{//映射前256项(1M)
+		page_table[i] = (i * PAGE_SIZE) | PT_PRESENT | PT_WRITABLE;
 	}
+	printf("g_page_table_0x000000000=%08X\n", page_table);
 
 	//分配页表，用于映射内核代码至VA_0x80000000~....
 	//g_page_table_0x800000000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
 
-	//分配页表
+	//分配虚拟地址映射页表(0xC0400000~0xC07fffff)
+	page_table = (uint32*)alloc_page_frame();
+	g_page_dir[PD_INDEX(PAGE_FRAME_BASE)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+	memset(page_table, 0, PAGE_SIZE);
 	//映射page_frame_database至VA_0xC00400000~C004fffff(1M)
-	//映射PA_0x00000000~0x000fffff至VA_0xC00500000~C005fffff(1M)
-	g_page_table_0xC00400000 = (uint32*)(g_page_frame_min++ * PAGE_SIZE);
-
-	
-	
-	
-	g_page_dir[PD_INDEX(PAGE_FRAME_BASE)] = (uint32)g_page_table_0xC00400000 | PT_PRESENT | PT_WRITABLE;
-
-
-	uint32 physical_pages = g_page_frame_max;
-	uint32 database_pages = (physical_pages / 8 / 0x1000) + 1;
-	
-	for (int32 i = 0; i < database_pages; i++)
-	{
-		uint32 page_frame = g_page_frame_min++;
+	for (int32 i = 0; i < 256; i++)
+	{//分配并映射256页(1M)
+		uint32 page_frame = alloc_page_frame();
 		uint32 page_addr = page_frame * PAGE_SIZE;
 		uint32 page_va = PAGE_FRAME_BASE + (i * PAGE_SIZE);
-		g_page_table_0xC00400000[PT_INDEX(page_va)] = page_addr | PT_PRESENT | PT_WRITABLE;
+		page_table[PT_INDEX(page_va)] = page_addr | PT_PRESENT | PT_WRITABLE;
 		memset((void*)page_addr, 0, PAGE_SIZE);
 	}
+	//映射物理页PA_0x00000000~0x000fffff至VA_0xC00500000~C005fffff(1M)
+	for (int32 i = 0; i < 256; i++)
+	{//映射256页(1M)
+		uint32 page_addr = i * PAGE_SIZE;
+		uint32 page_va = PAGE_LOW1M_BASE + (i * PAGE_SIZE);
+		page_table[PT_INDEX(page_va)] = page_addr | PT_PRESENT | PT_WRITABLE;
+	}
 	
-}
+	printf("g_page_table_0xC00400000=%08X\n", page_table);
 
-uint32 get_page_state(uint32 page)
-{
-	return g_page_frame_bitmap[page >> 3] & (1 << (page & 7));
-}
-
-void set_page_used(uint32 page)
-{
-	g_page_frame_bitmap[page >> 3] |= (1 << (page & 7));
-}
-
-void set_page_free(uint32 page)
-{
-	g_page_frame_bitmap[page >> 3] &= ~(1 << (page & 7));
-}
-
-uint32 alloc_physical_page()
-{
-	for (uint32 i = g_next_free_page; i < g_page_frame_max; i++)
+	for (int32 i = 0; i < (0x100000 >> 12); i++)
 	{
-		if (get_page_state(i) == 0)
-		{
-			g_next_free_page = i + 1;
-			return i;
-		}
+		g_page_frame_database[i] = PAGE_FRAME_LOW1M;
 	}
-	return 0;
+
+	//for (int32 i = g_page_frame_max; i < 0x100000; i++)
+	//{
+	//	g_page_frame_database[i] = PAGE_FRAME_NONE;
+	//}
+	
+	return g_page_dir;
 }
 
-void   free_physical_page(uint32 page)
+uint32  alloc_page_frame()
 {
-	set_page_free(page);
-	if (page < g_next_free_page)
-	{
-		g_next_free_page = page;
-	}
+	uint32 page_addr = g_page_frame_min*PAGE_SIZE;
+	g_page_frame_min ++;
+	return page_addr;
 }
 
-uint32 alloc_physical_pages(uint32 pages)
+void*   map_kernel_space(uint32 virtual_address, uint32 size)
 {
-	for (uint32 i = g_next_free_page; i < g_page_frame_max-pages; i++)
-	{
-		if (get_page_state(i) == 0)
-		{
-			uint32 j = i;
-			for (j++; j < i + pages && j < g_page_frame_max; j++)
-			{
-				if (get_page_state(i) != 0) break;
-			}
-			if (j = i + pages)
-			{
-				g_next_free_page = j;
-				return i;
-			}
-		}
-	}
-	return 0;
-}
+	uint32* page_dir = (uint32*)0xC0300000;
+	uint32 physical_address = 0;
+	uint32 pages = (size + PAGE_SIZE - 1) >> 12;
+	uint32 protect = PT_PRESENT | PT_WRITABLE;
 
-void   free_physical_pages(uint32  start_page, uint32 pages)
-{
-	for (uint32 i = start_page; i < start_page + pages; i++)
-	{
-		set_page_free(i);
-	}
-	if (g_next_free_page > start_page)
-	{
-		g_next_free_page = start_page;
-	}
-}
-
-uint32* get_page_table_va(uint32 virtual_address)
-{
-	uint32 pd_index = PD_INDEX(virtual_address);
-	uint32 pde = g_page_dir[pd_index];
-	uint32 page_table_pa = pde & PAGE_FRAME_MASK;
-	return (uint32*)page_table_pa;
-}
-
-uint32* get_page_table_pa(uint32 virtual_address)
-{
-	uint32 pd_index = PD_INDEX(virtual_address);
-	if (g_page_dir[pd_index] == 0)
-	{
-		return (uint32*)NULL;
-	}
-	uint32* page_table = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-	return page_table;
-}
-
-void* map_pages(uint32 virtual_address, uint32 physical_address, uint32 pages, uint32 protect)
-{
 	for (uint32 i = 0; i < pages; i++)
 	{
 		uint32 va = virtual_address + i * PAGE_SIZE;
-		uint32 pa = physical_address + i * PAGE_SIZE;
+		uint32 pa = alloc_page_frame();
 		uint32 pd_index = PD_INDEX(va);
 		uint32 pt_index = PT_INDEX(va);
-		if (g_page_dir[pd_index] == 0)
+		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
+		if (page_dir[pd_index] == 0)
 		{
-			uint32 pt_pa = alloc_physical_page();
-			g_page_dir[pd_index] = pt_pa | PT_PRESENT | PT_WRITABLE;
+			uint32  page_table_PA = alloc_page_frame();
+			page_dir[pd_index] = page_table_PA | PT_PRESENT | PT_WRITABLE;
+			memset(page_table_VA, 0, PAGE_SIZE);
 		}
-		uint32* page_table = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-		page_table[pt_index] = pa | protect;
+		page_table_VA[pt_index] = pa | protect;
 	}
 	return (void*)virtual_address;
 }

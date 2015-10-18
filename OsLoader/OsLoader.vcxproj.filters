@@ -18,23 +18,11 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="page.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="C++.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="mmu.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="page.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="C++.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="mmu.h">
       <Filter>头文件</Filter>
     </ClInclude>
