@@ -216,13 +216,13 @@ print_hex:
 GDT32:
 			dq	0x0000000000000000
 .code32		equ  $ - GDT32
-		    dq	0x00cf98000000ffff
+		    dq	0x00cf9A000000ffff
 .data32		equ  $ - GDT32
 			dq	0x00cf92000000ffff
 .real_code  equ  $ - GDT32
-			dq	0x00009C000000ffff
+			dq	0x000f9A000000ffff
 .real_data  equ  $ - GDT32
-			dq	0x000092000000ffff
+			dq	0x000f92000000ffff
 
 GDTR		dw	$ - GDT32 - 1
 			dd	GDT32 ;GDT的物理/线性地址

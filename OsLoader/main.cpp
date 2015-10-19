@@ -45,7 +45,6 @@ uint32 load_kernel()
 	return file.size;
 }
 
-ACPI  acpi;
 void	main(uint64 memsize)
 {
 	printf("\nmemsize=%llX\n", memsize);

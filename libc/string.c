@@ -134,21 +134,23 @@ int _strcmpi(const char *s1, const char *s2)
 #undef strstr
 char *strstr(const char *s, const char *find)
 {
-  char c, sc;
-  size_t len;
+	char c, sc;
+	size_t len;
 
-  if ((c = *find++) != 0)
-  {
-    len = strlen(find);
-    do {
-      do {
-	if ((sc = *s++) == 0)
-	  return 0;
-      } while (sc != c);
-    } while (strncmp(s, find, len) != 0);
-    s--;
-  }
-  return (char *)s;
+	if ((c = *find++) != 0)
+	{
+		len = strlen(find);
+		do
+		{
+			do
+			{
+				if ((sc = *s++) == 0)
+					return 0;
+			} while (sc != c);
+		} while (strncmp(s, find, len) != 0);
+		s--;
+	}
+	return (char *)s;
 }
 
 char *strcat(char *s, const char *append)
@@ -167,7 +169,8 @@ int strncmp(const char *s1, const char *s2, size_t n)
 
   if (n == 0)
     return 0;
-  do {
+  do 
+  {
     if (*s1 != *s2++)
       return *(unsigned const char *)s1 - *(unsigned const char *)--s2;
     if (*s1++ == 0)
@@ -181,7 +184,8 @@ int _strnicmp(const char *s1, const char *s2, size_t n)
 
   if (n == 0)
     return 0;
-  do {
+  do 
+  {
     if (toupper(*s1) != toupper(*s2++))
       return toupper(*(unsigned const char *)s1) - toupper(*(unsigned const char *)--s2);
     if (*s1++ == 0)
@@ -230,7 +234,8 @@ strtol(const char *nptr, char **endptr, int base)
    * If base is 0, allow 0x for hex and 0 for octal, else
    * assume decimal; if base is already 16, allow 0x.
    */
-  do {
+  do 
+  {
     c = *s++;
   } while (isspace(c));
   if (c == '-')

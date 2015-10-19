@@ -94,13 +94,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cpu.cpp" />
+    <ClCompile Include="Exception.cpp" />
     <ClCompile Include="gdt.cpp" />
     <ClCompile Include="idt.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="main.cpp" />
     <None Include="malloc.c" />
     <ClCompile Include="page_frame.cpp" />
     <ClCompile Include="pci.cpp" />
     <ClCompile Include="pic.cpp" />
+    <ClCompile Include="tss.cpp" />
     <ClCompile Include="win32.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -110,8 +113,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu.h" />
+    <ClInclude Include="Exception.h" />
     <ClInclude Include="gdt.h" />
     <ClInclude Include="idt.h" />
+    <ClInclude Include="Keyboard.h" />
     <ClInclude Include="page_frame.h" />
     <ClInclude Include="pci.h" />
     <ClInclude Include="pic.h" />

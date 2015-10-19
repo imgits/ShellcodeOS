@@ -94,11 +94,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="acpi.cpp" />
     <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="acpi.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="boot.asm">
@@ -117,6 +113,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="callbios.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nasm -f win32 ./callbios.asm -o ../bin/callbios.obj</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../bin/callbios.obj</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="bioscall.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nasm -f win32 ./bioscall.asm -o ../bin/bioscall.obj</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../bin/bioscall.obj</Outputs>
+    </CustomBuild>
     <None Include="int32.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,20 +1,10 @@
 #include "gdt.h"
-#include "tss.h"
+#include "idt.h"
 #include <string.h>
 #include "typedef.h"
+#include "stdio.h"
 
-static  TSS sys_tss;
-
-//GDT32:
-//dq	0x0000000000000000
-//.code32		equ  $ - GDT32
-//dq	0x00cf98000000ffff
-//.data32		equ  $ - GDT32
-//dq	0x00cf92000000ffff
-//.real_code  equ  $ - GDT32
-//dq	0x00009C000000ffff
-//.real_data  equ  $ - GDT32
-//dq	0x000092000000ffff
+//http://www.jamesmolloy.co.uk/tutorial_html/4.-The%20GDT%20and%20IDT.html
 
 GDT::GDT()
 {
@@ -27,41 +17,127 @@ GDT::~GDT()
 
 void GDT::Init()
 {
-	// Setup kernel text segment (4GB read and execute, ring 0)
-	init_seg(&m_gdt[GDT_KERNEL_CODE], 0, 0x100000, D_CODE | D_DPL0 | D_READ | D_PRESENT, D_BIG | D_BIG_LIM);
+	__asm cli
+	// setup a new gdt
+	/* 但这里有必要再做一次这个工作，便于管理。 */
 
-	// Setup kernel data segment (4GB read and write, ring 0)
-	init_seg(&m_gdt[GDT_KERNEL_DATA], 0, 0x100000, D_DATA | D_DPL0 | D_WRITE | D_PRESENT, D_BIG | D_BIG_LIM);
+	// 初始化一个代码段和一个数据段，内核态的线程使用
+	set_gdt_entry(GDT_KERNEL_CODE, 0x00000000, 0x000FFFFF, DA_CR | DA_32 | DA_DPL0 | DA_LIMIT_4K); //
+	set_gdt_entry(GDT_KERNEL_DATA, 0x00000000, 0x000FFFFF, DA_DRW | DA_32 | DA_DPL0 | DA_LIMIT_4K);
+	// 用户态线程使用
+	set_gdt_entry(GDT_USER_CODE, 0x00000000, 0x0007FFFF, DA_CR | DA_32 | DA_DPL3 | DA_LIMIT_4K);
+	set_gdt_entry(GDT_USER_DATA, 0x00000000, 0x0007FFFF, DA_DRW | DA_32 | DA_DPL3 | DA_LIMIT_4K);
+	set_gdt_entry(GDT_USER_CODE, 0X7EFDD000, 0x0000FFFF, DA_DRW | DA_32 | DA_DPL3);
 
-	// Setup user text segment (2GB read and execute, ring 3)
-	init_seg(&m_gdt[GDT_USER_CODE], 0, 0x80000, D_CODE | D_DPL3 | D_READ | D_PRESENT, D_BIG | D_BIG_LIM);
-
-	// Setup user data segment (2GB read and write, ring 3)
-	init_seg(&m_gdt[GDT_USER_DATA], 0, 0x80000, D_DATA | D_DPL3 | D_WRITE | D_PRESENT, D_BIG | D_BIG_LIM);
-
-	// Setup TSS segment
-	init_seg(&m_gdt[GDT_SYS_TSS], (unsigned long)&sys_tss, sizeof(TSS), D_TSS | D_DPL0 | D_PRESENT, 0);
-
-	// Setup TIB segment
-	init_seg(&m_gdt[GDT_TIB], 0, 4096, D_DATA | D_DPL3 | D_WRITE | D_PRESENT, 0);
-
-	struct GDTR
+	for (int i = 0; i < 7; i++)
 	{
-		uint16		limit;
-		segment*	base;
-	}gdtr;
-	
-	gdtr.limit = (sizeof(struct segment) * GDT_MAX) - 1;
+		printf("GDT[%d]: %016llX\n", i, *(uint64*)&m_gdt[i]);
+	}
+	GDTR gdtr;
+
+	gdtr.limit = sizeof(m_gdt) - 1;
 	gdtr.base = m_gdt;
-	__asm { lgdt gdtr }
+	__asm
+	{
+		lgdt gdtr
+		//jmp  0x08:flush_cs
+		push 0x08
+		push flush_cs
+		retf
+		flush_cs :
+	}
+
 }
 
-void GDT::init_seg(struct segment *seg, unsigned long addr, unsigned long size, int access, int granularity)
+//设置Global Descriptor Table项
+bool GDT::set_gdt_entry(uint32 vector, uint32 base, uint32 limit, uint32 attribute)
 {
-	seg->base_low = (unsigned short)(addr & 0xFFFF);
-	seg->base_med = (unsigned char)((addr >> 16) & 0xFF);
-	seg->base_high = (unsigned char)((addr >> 24) & 0xFF);
-	seg->limit_low = (unsigned short)((size - 1) & 0xFFFF);
-	seg->limit_high = (unsigned char)((((size - 1) >> 16) & 0xF) | (granularity << 4));
-	seg->access = access;
+	if (vector <= 0 || vector >= MAX_GDT_NUM)
+	{
+		return false;
+	}
+	SEGMENT_DESC* desc = m_gdt + vector;
+	desc->limit_low = limit & 0x0FFFF;
+	desc->base_low = base & 0x0FFFF;
+	desc->base_mid = (base >> 16) & 0x0FF;
+	desc->attr1 = attribute & 0xFF;
+	desc->limit_high_attr2 = ((limit >> 16) & 0x0F) | ((attribute >> 8) & 0xF0);
+	desc->base_high = (base >> 24) & 0x0FF;
+	return true;
+}
+
+//添加Global Descriptor Table项
+uint32  GDT::add_gdt_entry(uint32 base, uint32 limit, uint32 attribute)
+{
+	int vector = find_free_gdt_entry();
+	if (vector == 0) return 0;
+	SEGMENT_DESC* desc = m_gdt + vector;
+
+	desc->limit_low = limit & 0x0FFFF;
+	desc->base_low = base & 0x0FFFF;
+	desc->base_mid = (base >> 16) & 0x0FF;
+	desc->attr1 = attribute & 0xFF;
+	desc->limit_high_attr2 = ((limit >> 16) & 0x0F) | ((attribute >> 8) & 0xF0);
+	desc->base_high = (base >> 24) & 0x0FF;
+	return vector * 8;
+}
+
+//设置Local Descriptor Table项
+uint32  GDT::add_ldt_entry(uint32 base, uint32 limit, uint32 attribute)
+{
+	int vector = find_free_gdt_entry();
+	if (vector == 0) return 0;
+	SEGMENT_DESC* desc = m_gdt + vector;
+
+	desc->limit_low = limit & 0x0FFFF;
+	desc->base_low = base & 0x0FFFF;
+	desc->base_mid = (base >> 16) & 0x0FF;
+	desc->attr1 = (attribute & 0xFF);
+	desc->limit_high_attr2 = ((limit >> 16) & 0x0F) | ((attribute >> 8) & 0xF0);
+	desc->base_high = (base >> 24) & 0x0FF;
+	return vector * 8;
+}
+
+//添加TSS项
+uint32 GDT::add_tss_entry(uint32 base, uint32 limit)
+{
+	int vector = find_free_gdt_entry();
+	if (vector == 0) return 0;
+	SEGMENT_DESC* desc = m_gdt + vector;
+
+	desc->limit_low = limit & 0x0FFFF;
+	desc->base_low = base & 0x0FFFF;
+	desc->base_mid = (base >> 16) & 0x0FF;
+	desc->attr1 = DA_386TSS;
+	desc->limit_high_attr2 = ((limit >> 16) & 0x0F);
+	desc->base_high = (base >> 24) & 0x0FF;
+	return vector * 8;
+}
+
+//添加系统调用门
+uint32 GDT::add_call_gate(void* handler, int argc)
+{
+	int vector = find_free_gdt_entry();
+	if (vector == 0) return 0;
+	GATE_DESC* desc = (GATE_DESC*)(m_gdt + vector);
+
+	uint32 base = (uint32)handler;
+
+	desc->offset_low = base & 0xFFFF;
+	desc->selector = GDT_KERNEL_CODE;	//系统代码段
+	desc->dcount = argc;
+	desc->attr = DA_386CGate | DA_DPL3;
+	desc->offset_high = (base >> 16) & 0xFFFF;
+	return vector * 8;
+}
+
+uint32 GDT::find_free_gdt_entry()
+{
+	int vector = 0;
+	uint64* pgdt = (uint64*)m_gdt;
+	for (int i = 1; i < MAX_GDT_NUM; i++)
+	{
+		if (pgdt[i] == 0) return i;
+	}
+	return 0;
 }
