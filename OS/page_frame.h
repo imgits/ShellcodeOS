@@ -32,9 +32,9 @@ class PAGE_FRAME_DB
 public:
 	PAGE_FRAME_DB();
 	~PAGE_FRAME_DB();
-	bool	init(uint32 page_frame_min, uint32 page_frame_max);
+	bool		init(uint32 page_frame_min, uint32 page_frame_max);
 	uint32	alloc_physical_page();
-	void	free_physical_page(uint32 page);
+	void		free_physical_page(uint32 page);
 	uint32	alloc_physical_pages(uint32 pages);
-	void	free_physical_pages(uint32  start_page, uint32 pages);
+	void		free_physical_pages(uint32  start_page, uint32 pages);
 };

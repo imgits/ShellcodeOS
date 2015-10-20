@@ -9,6 +9,8 @@
 #include "pci.h"
 #include "cpu.h"
 #include "tss.h"
+#include "mmu.h"
+#include "acpi.h"
 #include "Exception.h"
 
 PAGE_FRAME_DB page_frame_db;
@@ -16,6 +18,7 @@ CPU			  cpu;
 GDT			  gdt;
 IDT			  idt;
 TSS           tss;
+MMU			  mmu;
 Exception     exception;
 void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 {
@@ -24,6 +27,11 @@ void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 
 	CppInit();
 	page_frame_db.init(page_frame_min, page_frame_max);
+	mmu.Init(&page_frame_db);
+
+	ACPI acpi;
+	acpi.Init(&mmu);
+
 	gdt.Init();
 	idt.Init();
 	tss.Init(&gdt);

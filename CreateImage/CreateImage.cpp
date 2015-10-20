@@ -68,6 +68,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	uint64_t PT_END = PT_BASE + max_pages * 8;
 	printf("PT_END=%0I64X\n", PT_END);
 
+	VirtualDisk vhd;
+	if (vhd.Open(argv[1]))
+	{
+		vhd.Detach();
+		vhd.Close();
+	}
 
 	MBR  boot_mbr;
 	MBR  vhd_mbr;
@@ -91,7 +97,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	len = fwrite(&boot_loader, 512, bootldr_sectors, fvhd);
 	fclose(fvhd);
 
-	VirtualDisk vhd;
 	if (vhd.Open(argv[1]) &&
 		vhd.Attach())
 	{

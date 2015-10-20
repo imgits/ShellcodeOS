@@ -95,6 +95,14 @@ public:
 		return false;
 	}
 
+	void Close()
+	{
+		if (m_hVHD != INVALID_HANDLE_VALUE)
+		{
+			CloseHandle(m_hVHD);
+			m_hVHD == INVALID_HANDLE_VALUE;
+		}
+	}
 	//http://stackoverflow.com/questions/24396644/programmatically-mount-a-microsoft-virtual-hard-drive-vhd
 	bool Attach()
 	{

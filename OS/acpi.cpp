@@ -17,7 +17,7 @@ static ACPI_MADT *s_madt;
 
 ACPI::ACPI()
 {
-
+	m_mmu = NULL;
 }
 
 ACPI::~ACPI()
@@ -26,8 +26,9 @@ ACPI::~ACPI()
 }
 
 //http://wiki.osdev.org/RSDP
-void ACPI::Init()
+void ACPI::Init(MMU* mmu)
 {
+	m_mmu = mmu;
 	printf("Search main BIOS area below 1MB\n");
 	u8 *p = (u8 *)0x000e0000;
 	u8 *end = (u8 *)0x000fffff;
@@ -88,11 +89,15 @@ bool ACPI::ParseRSDP(ACPI_RSDP10* rsdp)
 
 		if (xsdtAddr)
 		{
+			m_mmu->map_memory(xsdtAddr, xsdtAddr, 4096);
 			ParseXSDT((ACPI_XSDT*)xsdtAddr);
+			m_mmu->unmap_memory(xsdtAddr, 4096);
 		}
 		else
 		{
+			m_mmu->map_memory(rsdtAddr, rsdtAddr, 4096);
 			ParseRSDT((ACPI_RSDT*)rsdtAddr);
+			m_mmu->unmap_memory(rsdtAddr, 4096);
 		}
 	}
 	else
@@ -124,7 +129,6 @@ void ACPI::ParseXSDT(ACPI_XSDT *xsdt)
 		ACPI_HEADER* dt = (ACPI_HEADER*)xsdt->DescriptionTable[i];
 		ParseDT(dt);
 	}
-
 }
 
 //

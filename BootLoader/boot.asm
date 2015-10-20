@@ -3,14 +3,25 @@
          ;文件说明：硬盘主引导扇区代码 
          ;创建日期：2015-09-13 11:20        ;设置堆栈段和栈指针 
 
-%define  BOOT_LOADER_ADDRESS				0X10000;常数，内核加载的起始内存地址 
+%define  BOOT_LOADER_ADDRESS				0x10000;常数，内核加载的起始内存地址 
 %define  BOOT_LOADER_SEGMENT				(BOOT_LOADER_ADDRESS>>4)    ;常数，内核加载的起始内存段地址 
 %define  BOOT_LOADER_OFFSET					(BOOT_LOADER_ADDRESS&0xffff);常数，内核加载的起始内存段偏移 
 
-%define  BOOT_LOADER_STACK					0x00090000
+%define  BOOT_LOADER_STACK				0x00090000
 
-%define  MEM_MAP_COUNT						0x00007e00 ;将内存分布数据存放于此处,以便kernel_main中进行处理
+%define  MEMORY_PARAMS					0x00007e00
+%define  MEM_MAP_COUNT					0x00007e00 ;将内存分布数据存放于此处,以便kernel_main中进行处理
 %define  MEM_MAP_BUF			  			0x00007e04
+
+%define  DISK_INFO						0x00008000
+%define  BOOT_LOAD_DRIVER				0x00008000
+%define  DISK_INFO_DRIVER				0x00008000
+%define  DISK_INFO_TYPE					0x00008001
+%define  DISK_INFO_CYLINDERS				0x00008002
+%define  DISK_INFO_HEADS					0x00008004
+%define  DISK_INFO_SECTORS				0x00008005
+%define  DISK_PARAM_SEG					0x00008006
+%define  DISK_PARAM_OFFSET				0x00008008
 
 ; 0x00100000 +--------------------+
 ;            |      ROM           |
@@ -47,7 +58,8 @@ boot:
 ;=========================================================================
 		jmp     0000:start ;5byte
 ;------------------------------------------------------------------------
-bootdrv			 db      0  ;启动磁盘
+		nop
+;bootdrv			 db      0  ;启动磁盘
 boot_loader_main dd      0  ;boot_loader模块入口地址，由CreateImage写入
 Disk_Address_Packet:
 		db		10h		;size of packet (16 bytes)
@@ -62,15 +74,14 @@ Kernel_Sectors:
 ;------------------------------------------------------------------------
 start:
         ; Setup initial environment
-		cli
-		cld
         mov     ax, cs
         mov     ds, ax
         mov		ss, ax
 		mov		es, ax
         mov		esp, 0x7c00
 
-        mov     [bootdrv], dl ; Save boot drive
+        mov     [DISK_INFO_DRIVER], dl ; Save boot drive
+		mov     ah,0x08
 
 		;clear_screen
 		mov		ax,	0x0003
@@ -80,13 +91,60 @@ start:
         call    print
 		
 ;-----------------------------------------------------------------
+;获取启动磁盘参数
+;INT 13H传统中断，AH=08H
+;（1）  读取驱动器参数
+;AH＝08H
+;入口：
+;	DL＝驱动器，00H~7FH：软盘；80H~0FFH：硬盘
+;返回：
+;   CF＝1——操作失败，AH＝状态代码
+;   CF＝0 成功
+;   BL＝01H — 360K
+;     ＝02H — 1.2M
+;     ＝03H — 720K
+;     ＝04H — 1.44M
+;     ＝05H   ？？
+;     ＝06H  2.88M
+;     ＝10H  ATAPI可移动介质
+;   CH＝最大柱面号的低8位   low eight bits of maximum cylinder number（柱面号从0开始算）
+;   CL的位7-6＝最大柱面号的高2位 high two bits of maximum cylinder number
+;   CL的位5-0＝最大扇区号 maximum sector number（扇区号从1开始算）
+;   DH＝最大磁头号 maximum head number（磁头号从0开始算）
+;   DL＝驱动器数 number of drives
+;   ES:DI＝磁盘驱动器参数表地址（只软驱）
+		mov     si, get_disk_params_msg
+		call    print
+		mov     ah, 0x08
+		mov     dl, [DISK_INFO_DRIVER]
+		int     0x13
+		jnc     get_disk_params_ok
+		mov     si, failed_msg
+        call    print
+		hlt
+get_disk_params_ok:
+		mov     si, ok_msg
+        call    print
+		mov     [DISK_INFO_HEADS], dh
+		mov     ah,	cl
+		shr     ah,	6
+		mov     al,	ch
+		mov     [DISK_INFO_CYLINDERS], ax
+		and     cl, 00111111b
+		mov     [DISK_INFO_SECTORS], cl
+		mov     [DISK_INFO_TYPE], bl
+		;mov		ax,es
+		;mov     [DISK_PARAM_SEG], ax
+		;mov     [DISK_PARAM_OFFSET], di
+				
+;-----------------------------------------------------------------
 ;加载内核代码加载器OSloader
 		mov     si, load_osloader_msg
         call    print
 		
 		mov		si, Disk_Address_Packet	; address of "disk address packet"
 		mov		ah, 0x42			; AL is unused
-		mov		dl, [bootdrv]	; drive number 0 (OR the drive # with 0x80)
+		mov		dl, [DISK_INFO_DRIVER]	; drive number 0 (OR the drive # with 0x80)
 		int		0x13
 		jnc		load_osloader_ok
 load_osloader_failed:
@@ -138,11 +196,11 @@ mem_check_ok:
          in		al,0x92                         ;南桥芯片内的端口 
          or		al,0000_0010B
          out		0x92,al                        ;打开A20
-
 ;------------------------------------------------------------------
 ;初始化全局段描述符表，为进入保护模式作准备
-		 ;lidt	[IDTR]
+		 cli      ;此处关闭中断非常重要,否则，VMware中执行lidt	[IDTR]时会产生异常
 		 lgdt	[GDTR]
+		 lidt	[IDTR]
 
 ;-------------------------------------------------------------------
 ;启动保护模式
@@ -164,7 +222,7 @@ mem_check_ok:
          mov		fs,		ax
          mov		gs,		ax
          mov		ss,		ax										;加载堆栈段(4GB)选择子
-		 
+
 		 ;mov ah,    0xac
 		 ;mov edi,   0xb8000
 		 ;mov esi,   MEM_MAP_COUNT;KERNEL_START_ADDRESS
@@ -174,8 +232,8 @@ next_hex_char:
 		 ;call print_hex
 		 ;loop next_hex_char 
 		 mov     esp,  BOOT_LOADER_STACK
-		 push    dword [MEM_MAP_COUNT]
-		 push    MEM_MAP_BUF
+		 push    MEMORY_PARAMS
+		 push    DISK_INFO
 		 call	 [ds:boot_loader_main]
 		 hlt
 
@@ -219,10 +277,10 @@ GDT32:
 		    dq	0x00cf9A000000ffff
 .data32		equ  $ - GDT32
 			dq	0x00cf92000000ffff
-.real_code  equ  $ - GDT32
-			dq	0x000f9A000000ffff
-.real_data  equ  $ - GDT32
-			dq	0x000f92000000ffff
+;.real_code  equ  $ - GDT32
+;			dq	0x000f9A000000ffff
+;.real_data  equ  $ - GDT32
+;			dq	0x000f92000000ffff
 
 GDTR		dw	$ - GDT32 - 1
 			dd	GDT32 ;GDT的物理/线性地址
@@ -231,12 +289,13 @@ IDTR		dw	0
 			dd	0 ;IDT的物理/线性地址
 
 ; Message strings
-boot_msg			db      'BootStrap booting ...',13,10,0
-load_osloader_msg	db		'Load BootLoader ... ',0
-check_memory_msg	db		'Get MemoryMap ... ',0
+boot_msg			db      'BootStrap booting ',13,10,0
+get_disk_params_msg db      'Get disk params ',0
+load_osloader_msg	db		'Load BootLoader ',0
+check_memory_msg	db		'Get memory map ',0
 ok_msg				db		'OK',13,10,0
 failed_msg			db		'FAILED',13,10,0
-hex_chars			db      '0123456789ABCDEF dddddddddddddddddd                    '
+;hex_chars			db      '0123456789ABCDEF dddddddddddddddddd                    '
 
 ;-------------------------------------------------------------------------
 	times 510-64-($-$$) db 0
