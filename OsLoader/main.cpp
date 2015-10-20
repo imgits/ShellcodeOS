@@ -15,7 +15,7 @@ char    os_kernel[256] = "\\os\\scos.exe";
 extern uint32	g_page_frame_min;
 extern uint32	g_page_frame_max;
 
-uint32 load_kernel()
+uint32 load_kernel(byte boot_driver)
 {
 	//读主引导扇区
 	MBR mbr;
@@ -23,7 +23,7 @@ uint32 load_kernel()
 	uint32 volume0_start_sector = mbr.partition_table[0].first_sector;
 
 	FAT32 fat32;
-	fat32.Init(mbr.bootdrv, volume0_start_sector);
+	fat32.Init(boot_driver, volume0_start_sector);
 
 	FILE_OBJECT file;
 	if (!fat32.open_file(&file, os_kernel))
@@ -45,18 +45,18 @@ uint32 load_kernel()
 	return file.size;
 }
 
-void	main(uint64 memsize)
+void	main(byte boot_driver, uint64 mem_size)
 {
-	printf("\nmemsize=%llX\n", memsize);
+	printf("\nmemsize=%llX\n", mem_size);
 	puts("Hello world\n", 10);
 	puts("OsLoader.exe is starting...\n", 10);
 
 	ACPI  acpi;
 
-	acpi.Init();
+	//acpi.Init();
 
 	//初始化页帧数据库
-	void* page_dir = init_page_frame_database(memsize);
+	void* page_dir = init_page_frame_database(mem_size);
 
 	//进入分页模式
 	__asm
@@ -68,7 +68,7 @@ void	main(uint64 memsize)
 		mov		cr0, eax
 	}
 
-	int kernel_size = load_kernel();
+	int kernel_size = load_kernel(boot_driver);
 	
 	typedef void (*kernel_main)(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max);
 

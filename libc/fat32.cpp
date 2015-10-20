@@ -27,7 +27,7 @@ bool	 read_sectors(void* sec_buf, uint32 first_sector, int total_secs)
 		outportb(0x1f7, 0x20); //读命令
 
 							   //等待
-		while ((inportb(0x1f7) & 0x88) != 8); //不忙，且硬盘已准备好数据传输 
+		while (( inportb(0x1f7) & 0x88) != 8); //不忙，且硬盘已准备好数据传输 
 		__asm   cld
 		__asm	mov  ecx, 512 / 2
 		__asm   mov  edi, pdata

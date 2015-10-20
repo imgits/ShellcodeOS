@@ -1,14 +1,14 @@
 #pragma once
 #include "typedef.h"
 
-static byte inportb(uint16 port)
+static uint32 inportb(uint16 port)
 {
 	__asm
 	{
 		push		edx
 			mov		dx, port
 			xor		eax, eax
-			in			al, dx
+			in		al, dx
 			pop		edx
 	}
 }

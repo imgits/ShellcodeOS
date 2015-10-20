@@ -100,10 +100,10 @@ public:
 		if (m_hVHD != INVALID_HANDLE_VALUE)
 		{
 			CloseHandle(m_hVHD);
-			m_hVHD == INVALID_HANDLE_VALUE;
+			m_hVHD = INVALID_HANDLE_VALUE;
 		}
 	}
-	//http://stackoverflow.com/questions/24396644/programmatically-mount-a-microsoft-virtual-hard-drive-vhd
+
 	bool Attach()
 	{
 		assert(INVALID_HANDLE_VALUE != m_hVHD);
@@ -116,6 +116,29 @@ public:
 		if (ret == ERROR_SUCCESS) return true;
 		PrintErrorMessage(ret);
 		return false;
+	}
+
+	//http://stackoverflow.com/questions/24396644/programmatically-mount-a-microsoft-virtual-hard-drive-vhd
+	bool Attach(char* VolumeMountPoint)
+	{
+		assert(INVALID_HANDLE_VALUE != m_hVHD);
+		ATTACH_VIRTUAL_DISK_PARAMETERS iparams;
+		iparams.Version = ATTACH_VIRTUAL_DISK_VERSION_1;
+		DWORD ret = ERROR_SUCCESS;
+		ret = AttachVirtualDisk(m_hVHD, NULL,
+			ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER |
+			ATTACH_VIRTUAL_DISK_FLAG_PERMANENT_LIFETIME,
+			0, &iparams, NULL);
+		if (ret != ERROR_SUCCESS)
+		{
+			PrintErrorMessage(ret);
+			return false;
+		}
+
+		if (!GetPhysicalPath()) return false;
+		int len = wcslen(m_PhysicalDiskPath);
+		DWORD DriverNumber = m_PhysicalDiskPath[len - 1] - '0';
+		return MountVolume(VolumeMountPoint, DriverNumber);
 	}
 
 	bool Detach()
@@ -139,6 +162,75 @@ public:
 	}
 
 private:
+
+	bool MountVolume(char* VolumeMountPoint, DWORD driveNumber)
+	{
+		char volumeName[MAX_PATH];
+		DWORD bytesReturned;
+		VOLUME_DISK_EXTENTS diskExtents;
+		HANDLE hFileVolume = INVALID_HANDLE_VALUE;
+		HANDLE hFindVolume = FindFirstVolume(volumeName, sizeof(volumeName));
+		if (hFindVolume == INVALID_HANDLE_VALUE)
+		{
+			PrintErrorMessage(GetLastError());
+			return false;
+		}
+
+		bool hadTrailingBackslash = false;
+		bool MountResult = false;
+		do 
+		{
+			printf("%s\n", volumeName);
+			// I had a problem where CreateFile complained about the trailing \ and
+			// SetVolumeMountPoint desperately wanted the backslash there. I ended up 
+			// doing this to get it working but I'm not a fan and I'd greatly 
+			// appreciate it if someone has any further info on this matter
+			int backslashPos = strlen(volumeName) - 1;
+			if (hadTrailingBackslash = volumeName[backslashPos] == '\\') 
+			{
+				volumeName[backslashPos] = 0;
+			}
+			hFileVolume = CreateFile(volumeName, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+			if (hFileVolume == INVALID_HANDLE_VALUE)
+			{
+				PrintErrorMessage(GetLastError());
+				break;
+			}
+
+			if (!DeviceIoControl(hFileVolume, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL,
+				0, &diskExtents, sizeof(diskExtents), &bytesReturned, NULL))
+			{
+				PrintErrorMessage(GetLastError());
+				break;
+			}
+
+			// If the volume were to span across multiple physical disks, you'd find 
+			// more than one Extents here but we don't have to worry about that with VHD
+			// Note that 'driveNumber' would be the integer you extracted out of 
+			// 'physicalDrive' in the previous snippet
+			if (diskExtents.Extents[0].DiskNumber == driveNumber)
+			{
+				if (hadTrailingBackslash) 
+				{
+					volumeName[backslashPos] = '\\';
+				}
+
+				// Found volume that's on the VHD, let's mount it with a letter of our choosing.
+				// Warning: SetVolumeMountPoint requires elevation
+				if (!(MountResult = SetVolumeMountPoint(VolumeMountPoint, volumeName)))
+				{
+					PrintErrorMessage(GetLastError());
+				}
+				break;
+			}
+			CloseHandle(hFileVolume);
+			hFileVolume = INVALID_HANDLE_VALUE;
+		} while (FindNextVolume(hFindVolume, volumeName, sizeof(volumeName)));
+		FindVolumeClose(hFindVolume);
+		if (hFileVolume!= INVALID_HANDLE_VALUE) CloseHandle(hFileVolume);
+		return MountResult;
+	}
+
 	void PrintErrorMessage(ULONG ErrorId)
 	{
 		PVOID Message = NULL;

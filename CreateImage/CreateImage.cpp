@@ -97,6 +97,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	len = fwrite(&boot_loader, 512, bootldr_sectors, fvhd);
 	fclose(fvhd);
 
+	char VolumeMountPoint[5] = "c:\\";
+	VolumeMountPoint[0] = argv[5][0];
 	if (vhd.Open(argv[1]) &&
 		vhd.Attach())
 	{

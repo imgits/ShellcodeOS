@@ -93,6 +93,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="8253.cpp" />
     <ClCompile Include="acpi.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="Exception.cpp" />
@@ -104,7 +105,7 @@
     <ClCompile Include="mmu.cpp" />
     <ClCompile Include="page_frame.cpp" />
     <ClCompile Include="pci.cpp" />
-    <ClCompile Include="pic.cpp" />
+    <ClCompile Include="8259.cpp" />
     <ClCompile Include="tss.cpp" />
     <ClCompile Include="win32.cpp" />
   </ItemGroup>
@@ -114,6 +115,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="8253.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="Exception.h" />
@@ -123,7 +125,7 @@
     <ClInclude Include="mmu.h" />
     <ClInclude Include="page_frame.h" />
     <ClInclude Include="pci.h" />
-    <ClInclude Include="pic.h" />
+    <ClInclude Include="8259.h" />
     <ClInclude Include="tss.h" />
     <ClInclude Include="win32.h" />
   </ItemGroup>

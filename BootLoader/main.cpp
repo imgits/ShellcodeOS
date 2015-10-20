@@ -89,7 +89,7 @@ extern "C" int vesa_get_mode_info(int mode, struct vesa_mode_info *info);
 extern "C" int vesa_set_mode(int mode);
 
 
-uint32 load_os_loader()
+uint32 load_os_loader(byte driver)
 {
 	//读主引导扇区
 	void*   loader_buf = (void*)KERNEL_LOADER_BASE;
@@ -105,7 +105,7 @@ uint32 load_os_loader()
 
 	FAT32 fat32;
 
-	fat32.Init(mbr.bootdrv, volume0_start_sector);
+	fat32.Init(driver, volume0_start_sector);
 
 	FILE_OBJECT file;
 	if (!fat32.open_file(&file, kernel_loader))
@@ -174,13 +174,13 @@ void main(disk_info* disk, memory_info* mem_info)
 	}
 	printf("memsize=%llX\n", memsize);
 	
-	load_os_loader();
+	load_os_loader(disk->driver);
 
-	typedef void (*osloader_main)(uint64 memsize);
+	typedef void (*osloader_main)(byte boot_driver, uint64 mem_size);
 
 	PE pe((void*)KERNEL_LOADER_BASE);
 	osloader_main osldr_main = (osloader_main)pe.EntryPoint();
-	osldr_main(memsize);
+	osldr_main(disk->driver, memsize);
 
 	__asm jmp $
 }

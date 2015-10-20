@@ -20,6 +20,7 @@ IDT			  idt;
 TSS           tss;
 MMU			  mmu;
 Exception     exception;
+
 void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 {
 	puts("\nHello world\n", 30);

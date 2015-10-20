@@ -34,7 +34,7 @@ struct PTINFO
 struct MBR
 {
 	char far_jmp_start[5];
-	char bootdrv;
+	char nop;
 	uint32 boot_loader_main;
 	struct
 	{
@@ -126,8 +126,6 @@ struct FILE_OBJECT
 };
 #pragma pack(pop)
 
-byte		inportb(uint16 port);
-void		outportb(uint16 port, byte val);
 bool		read_sectors(void* sec_buf, uint32 first_sector, int total_secs);
 
 class FAT32
