@@ -21,17 +21,14 @@ struct PIT_HANDLER
 class PIT
 {
 private:
-	PIC*         m_pic;
-	uint32       m_counter;
-	uint64       m_timer;
-	PIT_HANDLER  m_handlers[MAX_PIT_HANDLERS];
+	static uint32       m_counter;
+	static uint64       m_timer;
+	static PIT_HANDLER  m_handlers[MAX_PIT_HANDLERS];
 private:
-	static void	pit_irq_handler(IRQ_CONTEXT* context);
-	void	irq_handler(IRQ_CONTEXT* context);
+	static void	irq_handler(PIC_IRQ_CONTEXT* context);
 public:
-	PIT();
-	~PIT();
-	bool Init(PIC* pic);
-	bool register_timer(uint32 id, uint32 period, TIMER_HANDLER handler);
+	static bool Init();
+	static bool set_timer(uint32 id, uint32 period, TIMER_HANDLER handler);
+	static bool kill_timer(uint32 id);
 };
 

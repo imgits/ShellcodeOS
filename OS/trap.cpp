@@ -1,4 +1,4 @@
-#include "Exception.h"
+#include "trap.h"
 #include "stdio.h"
 
 #define EXCEPTION_WITH_ERROR_CODE(int_no) \
@@ -50,7 +50,8 @@
 
 #define INTERRUPT __declspec(naked) 
 #define EFLAGS_TF	0x00000100
-void __cdecl page_fault(EXCEPTION_CONTEXT* context)
+
+void __cdecl page_fault(TRAP_CONTEXT* context)
 {
 	__asm cli
 	uint32 errcode = context->err_code & 0x7;
@@ -89,7 +90,7 @@ void __cdecl page_fault(EXCEPTION_CONTEXT* context)
 //	uint32 _ebx, uint32 _edx,uint32 _ecx,  uint32 _eax,
 //	uint32 int_no, uint32 errorcode,
 //	uint32 _eip,	uint32 _cs,  uint32 _eflags)
-void __cdecl exception_dispatch(EXCEPTION_CONTEXT* context)
+void __cdecl exception_dispatch(TRAP_CONTEXT* context)
 {
 	uint32 _CR2 = 0;
 	uint32 virt_addr = 0;
@@ -260,7 +261,7 @@ void  INTERRUPT simd_fpu_fault_0x13()
 
 #endif //EXCEPTION_HANDLER_XX
 
-void Exception::Init(IDT* idt)
+void TRAP::Init(IDT* idt)
 {
 	//idt->set_idt_entry(0, DA_386TGate, divide_by_zero_fault_0x00);
 	//idt->set_idt_entry(1, DA_386TGate, single_step_trap_0x01);
@@ -284,12 +285,3 @@ void Exception::Init(IDT* idt)
 	//idt->set_idt_entry(19, DA_386TGate, simd_fpu_fault_0x13);
 }
 
-
-Exception::Exception()
-{
-}
-
-
-Exception::~Exception()
-{
-}

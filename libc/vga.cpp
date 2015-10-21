@@ -134,6 +134,15 @@ void puts(const char* str, char fore, char back)
 	for (int i = 0; i < len; i++) putc(str[i], fore, back);
 }
 
+void setchar(int x, int y, char ch, char fore, char back)
+{
+	if (ch <= 0x20 || x >= VGA_WIDTH || y >= VGA_WIDTH) return;
+	byte* addr = (byte*)video_frame_buf + (y*VGA_WIDTH + x) * 2;
+	*addr++ = ch;
+	*addr = (back << 4) | fore;
+}
+
+
 #include "stdio.h"
 int __cdecl printf(const char *fmt, ...)
 {

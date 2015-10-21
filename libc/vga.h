@@ -31,6 +31,7 @@ void screen_scroll(int lines);
 void putc(char ch, char fore = VGA_LIGHT_GRAY, char back = VGA_BLACK);
 void putchar(int x, int y, char ch, char fore = VGA_LIGHT_GRAY, char back = VGA_BLACK);
 void puts(const char* str, char fore = VGA_LIGHT_RED, char back = VGA_BLACK);
+void setchar(int x, int y, char ch, char fore, char back);
 
 
 

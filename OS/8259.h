@@ -5,8 +5,8 @@
 #include "IDT.h"
 #include "ioport.h"
 
-#define	PIC1_INT0			0x20
-#define	PIC2_INT0			0x28
+#define	PIC1_INT0				0x20
+#define	PIC2_INT0				0x28
 
 #define PIC1_CMD_PORT			0x20
 #define PIC1_DATA_PORT			0x21
@@ -32,20 +32,36 @@
 #define	IRQ_STAT0				14
 #define	IRQ_STAT1				15
 
-class PIC
+struct PIC_IRQ_CONTEXT
 {
-public:
-	IRQ_HANDLER m_irq_handlers[16];
-public:
-	PIC();
-	~PIC();
-
-	void	Init(IDT* idt);
-	void	enable_irq(int irq);
-	void	disable_irq(int irq);
-
-	bool	register_irq(int irq_no, IRQ_HANDLER irq_handler);
-
+	uint32	edi;
+	uint32	esi;
+	uint32	ebp;
+	uint32	tmp;
+	uint32	ebx;
+	uint32	edx;
+	uint32	ecx;
+	uint32	eax;
+	uint32	int_id;
+	//uint32	error_code;
+	uint32	eip;
+	uint32	cs;
+	uint32  eflags;
+	uint32  esp;
+	uint32  ss;
 };
 
-extern PIC	g_pic;
+typedef void(*PIC_IRQ_HANDLER)(PIC_IRQ_CONTEXT* context);
+
+class PIC
+{
+private:
+	static PIC_IRQ_HANDLER m_irq_handlers[16];
+public:
+	static void	Init(IDT* idt);
+	static void	enable_irq(int irq);
+	static void	disable_irq(int irq);
+	static void irq_dispatch(PIC_IRQ_CONTEXT* context);
+	static bool	register_irq(int irq_no, PIC_IRQ_HANDLER irq_handler);
+
+};

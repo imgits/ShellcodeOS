@@ -13,7 +13,10 @@
 #include "tss.h"
 #include "mmu.h"
 #include "acpi.h"
-#include "Exception.h"
+#include "trap.h"
+#include "8253.h"
+#include "8259.h"
+#include "keyboard.h"
 
 PAGE_FRAME_DB  page_frame_db;
 CPU			  cpu;
@@ -21,7 +24,7 @@ GDT			  gdt;
 IDT			  idt;
 TSS           tss;
 MMU			  mmu;
-Exception     exception;
+TRAP		  trap;
 
 void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 {
@@ -42,8 +45,11 @@ void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 	gdt.Init();
 	idt.Init();
 	tss.Init(CR3,&gdt);
-	exception.Init(&idt);
-
+	trap.Init(&idt);
+	PIC::Init(&idt);
+	PIT::Init();
+	Keyboard::Init();
+	_enable();
 	__asm jmp $
 }
 

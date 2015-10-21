@@ -2,15 +2,69 @@
 #include "gdt.h"
 #include "stdio.h"
 
-PIC		g_pic;
+PIC_IRQ_HANDLER PIC::m_irq_handlers[16] = { 0 };
 
-void __cdecl interrupt_dispatch(IRQ_CONTEXT* context)
+#define PIC_IRQ_ENTRY(irq_id) \
+void  __declspec(naked) pic_irq_entry_##irq_id() \
+{ \
+	__asm	cli \
+	__asm	push		irq_id  /*中断请求向量*/ \
+	__asm	pushad \
+	__asm   push	esp \
+	__asm	call	PIC::irq_dispatch \
+	__asm   add		esp, 4 \
+	__asm	popad \
+	__asm   add		esp,	4 \
+	__asm	sti \
+	__asm	iretd \
+}
+
+//32-255 用户定义中断
+PIC_IRQ_ENTRY(0x00)
+PIC_IRQ_ENTRY(0x01)
+PIC_IRQ_ENTRY(0x02)
+PIC_IRQ_ENTRY(0x03)
+PIC_IRQ_ENTRY(0x04)
+PIC_IRQ_ENTRY(0x05)
+PIC_IRQ_ENTRY(0x06)
+PIC_IRQ_ENTRY(0x07)
+
+PIC_IRQ_ENTRY(0x08)
+PIC_IRQ_ENTRY(0x09)
+PIC_IRQ_ENTRY(0x0A)
+PIC_IRQ_ENTRY(0x0B)
+PIC_IRQ_ENTRY(0x0C)
+PIC_IRQ_ENTRY(0x0D)
+PIC_IRQ_ENTRY(0x0E)
+PIC_IRQ_ENTRY(0x0F)
+
+void* pic_irq_entries[16]
+{
+	pic_irq_entry_0x00,
+	pic_irq_entry_0x01,
+	pic_irq_entry_0x02,
+	pic_irq_entry_0x03,
+	pic_irq_entry_0x04,
+	pic_irq_entry_0x05,
+	pic_irq_entry_0x06,
+	pic_irq_entry_0x07,
+	pic_irq_entry_0x08,
+	pic_irq_entry_0x09,
+	pic_irq_entry_0x0A,
+	pic_irq_entry_0x0B,
+	pic_irq_entry_0x0C,
+	pic_irq_entry_0x0D,
+	pic_irq_entry_0x0E,
+	pic_irq_entry_0x0F
+};
+
+void PIC::irq_dispatch(PIC_IRQ_CONTEXT* context)
 {
 	static int Counter = 0;
 	static int CounterSec = 0;
 	static int Timer = 0;
-	int irq_no = context->int_no;
-	IRQ_HANDLER irq_handler = g_pic.m_irq_handlers[irq_no];
+	int irq_id = context->int_id;
+	PIC_IRQ_HANDLER irq_handler = m_irq_handlers[irq_id];
 	if (irq_handler != NULL)
 	{
 		irq_handler(context);
@@ -18,14 +72,6 @@ void __cdecl interrupt_dispatch(IRQ_CONTEXT* context)
 	//发送中断结束命令EOI（0x20)
 	outportb(PIC1_CMD_PORT, 0x20);//向主片发送中断结束命令
 	outportb(PIC2_CMD_PORT, 0x20);//向从片发送中断结束命令
-}
-
-PIC::PIC()
-{
-}
-
-PIC::~PIC()
-{
 }
 
 void PIC::Init(IDT* idt)
@@ -48,35 +94,28 @@ void PIC::Init(IDT* idt)
 	outportb(PIC2_DATA_PORT, 0xFF);
 
 	//设置硬件中断向量
-	//idt->set_idt_entry(PIC1_INT0 + 0, DA_386IGate, irq_00);
-	//idt->set_idt_entry(PIC1_INT0 + 1, DA_386IGate, irq_01);
-	//idt->set_idt_entry(PIC1_INT0 + 2, DA_386IGate, irq_02);
-	//idt->set_idt_entry(PIC1_INT0 + 3, DA_386IGate, irq_03);
-	//idt->set_idt_entry(PIC1_INT0 + 4, DA_386IGate, irq_04);
-	//idt->set_idt_entry(PIC1_INT0 + 5, DA_386IGate, irq_05);
-	//idt->set_idt_entry(PIC1_INT0 + 6, DA_386IGate, irq_06);
-	//idt->set_idt_entry(PIC1_INT0 + 7, DA_386IGate, irq_07);
+	idt->set_intr_gate(PIC1_INT0 + 0, pic_irq_entry_0x00);
+	idt->set_intr_gate(PIC1_INT0 + 1, pic_irq_entry_0x01);
+	idt->set_intr_gate(PIC1_INT0 + 2, pic_irq_entry_0x02);
+	idt->set_intr_gate(PIC1_INT0 + 3, pic_irq_entry_0x03);
+	idt->set_intr_gate(PIC1_INT0 + 4, pic_irq_entry_0x04);
+	idt->set_intr_gate(PIC1_INT0 + 5, pic_irq_entry_0x05);
+	idt->set_intr_gate(PIC1_INT0 + 6, pic_irq_entry_0x06);
+	idt->set_intr_gate(PIC1_INT0 + 7, pic_irq_entry_0x07);
 
-	//idt->set_idt_entry(PIC2_INT0 + 0, DA_386IGate, irq_08);
-	//idt->set_idt_entry(PIC2_INT0 + 1, DA_386IGate, irq_09);
-	//idt->set_idt_entry(PIC2_INT0 + 2, DA_386IGate, irq_10);
-	//idt->set_idt_entry(PIC2_INT0 + 3, DA_386IGate, irq_11);
-	//idt->set_idt_entry(PIC2_INT0 + 4, DA_386IGate, irq_12);
-	//idt->set_idt_entry(PIC2_INT0 + 5, DA_386IGate, irq_13);
-	//idt->set_idt_entry(PIC2_INT0 + 6, DA_386IGate, irq_14);
-	//idt->set_idt_entry(PIC2_INT0 + 7, DA_386IGate, irq_15);
+	idt->set_intr_gate(PIC2_INT0 + 0, pic_irq_entry_0x08);
+	idt->set_intr_gate(PIC2_INT0 + 1, pic_irq_entry_0x09);
+	idt->set_intr_gate(PIC2_INT0 + 2, pic_irq_entry_0x0A);
+	idt->set_intr_gate(PIC2_INT0 + 3, pic_irq_entry_0x0B);
+	idt->set_intr_gate(PIC2_INT0 + 4, pic_irq_entry_0x0C);
+	idt->set_intr_gate(PIC2_INT0 + 5, pic_irq_entry_0x0D);
+	idt->set_intr_gate(PIC2_INT0 + 6, pic_irq_entry_0x0E);
+	idt->set_intr_gate(PIC2_INT0 + 7, pic_irq_entry_0x0F);
 
-	//init_cmos_timer();
-	//init_8253_counter(20);
-	//init_keyboard();
-	//enable_irq(IRQ_PIT);
-	//enable_irq(IRQ_KEYBOARD);
-	//enable_irq(8);
-	//__asm sti;
 	printf("8259A init() OK\n");
 }
 
-bool PIC::register_irq(int irq_no, IRQ_HANDLER irq_handler)
+bool PIC::register_irq(int irq_no, PIC_IRQ_HANDLER irq_handler)
 {
 	if (irq_no < 0 || irq_no > 15) return false;
 	m_irq_handlers[irq_no] = irq_handler;

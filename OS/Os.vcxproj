@@ -98,7 +98,7 @@
     <ClCompile Include="8253.cpp" />
     <ClCompile Include="acpi.cpp" />
     <ClCompile Include="cpu.cpp" />
-    <ClCompile Include="Exception.cpp" />
+    <ClCompile Include="trap.cpp" />
     <ClCompile Include="gdt.cpp" />
     <ClCompile Include="idt.cpp" />
     <ClCompile Include="Keyboard.cpp" />
@@ -120,9 +120,10 @@
     <ClInclude Include="8253.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="cpu.h" />
-    <ClInclude Include="Exception.h" />
+    <ClInclude Include="trap.h" />
     <ClInclude Include="gdt.h" />
     <ClInclude Include="idt.h" />
+    <ClInclude Include="kernel.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="mmu.h" />
     <ClInclude Include="page_frame.h" />
