@@ -32,24 +32,6 @@
 #define	IRQ_STAT0				14
 #define	IRQ_STAT1				15
 
-struct INTERRUPT_CONTEXT
-{
-	uint32  eflags;
-	uint32	cs;
-	uint32	eip;
-	uint32	int_no;
-	uint32	eax;
-	uint32	ecx;
-	uint32	edx;
-	uint32	ebx;
-	uint32	esp;
-	uint32	ebp;
-	uint32	esi;
-	uint32	edi;
-};
-
-typedef void(*IRQ_HANDLER)(INTERRUPT_CONTEXT* context);
-
 class PIC
 {
 public:
@@ -66,4 +48,4 @@ public:
 
 };
 
-
+extern PIC	g_pic;

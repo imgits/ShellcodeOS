@@ -29,7 +29,7 @@ private:
 public:
 	TSS();
 	~TSS();
-	void Init(GDT * gdt);
+	void Init(uint32 cr3, GDT * gdt);
 
 private:
 	bool   Register(GDT * gdt);

@@ -28,12 +28,12 @@ bool PIT::Init(PIC* pic)
 	return true;
 }
 
-void	PIT::pit_irq_handler(INTERRUPT_CONTEXT* context)
+void	PIT::pit_irq_handler(IRQ_CONTEXT* context)
 {
 	g_pit.irq_handler(context);
 }
 
-void	PIT::irq_handler(INTERRUPT_CONTEXT* context)
+void	PIT::irq_handler(IRQ_CONTEXT* context)
 {
 	if (++m_counter >= 10)
 	{

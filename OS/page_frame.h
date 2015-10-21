@@ -9,7 +9,7 @@
 #define   PAGE_TABLE_BASE					0xC0000000
 #define   PAGE_FRAME_BASE					0xC0400000
 #define   PAGE_LOW1M_BASE					0xC0500000
-
+#define   PMODE_VIDEO_BASE				(PAGE_LOW1M_BASE + 0x000B8000)
 #define   PAGE_FRAME_FREE					0
 #define   PAGE_FRAME_LOW1M				1
 #define   PAGE_FRAME_USER					2

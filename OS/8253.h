@@ -26,8 +26,8 @@ private:
 	uint64       m_timer;
 	PIT_HANDLER  m_handlers[MAX_PIT_HANDLERS];
 private:
-	static void	pit_irq_handler(INTERRUPT_CONTEXT* context);
-	void	irq_handler(INTERRUPT_CONTEXT* context);
+	static void	pit_irq_handler(IRQ_CONTEXT* context);
+	void	irq_handler(IRQ_CONTEXT* context);
 public:
 	PIT();
 	~PIT();

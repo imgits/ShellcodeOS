@@ -8,11 +8,11 @@ TSS::TSS()
 	memset(this, 0, sizeof(TSS)); //∑¥œÚ¡¥=0
 }
 
-void TSS::Init(GDT * gdt)
+void TSS::Init(uint32 cr3, GDT * gdt)
 {
 	m_back_link = 0;
 	//m_esp0 = KERNEL_STACK_TOP;
-	m_ss0 = GDT_KERNEL_CODE;
+	m_ss0 = SEL_KERNEL_CODE;
 	m_cr3 = CR3();//µ«º«CR3(PDBR)
 	m_eip = 0;//(uint32)UserProcess;
 	m_eflags = 0x00000202;

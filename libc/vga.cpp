@@ -8,6 +8,13 @@
 #include "vga.h"
 #include "ioport.h"
 
+void * video_frame_buf = (void*)VGA_BUFFER_ADDRESS;
+
+void init_vga(void* vga_buffer)
+{
+	video_frame_buf = vga_buffer;
+}
+
 void gotoxy(int x, int y)
 {
 	//以下取当前光标位置
@@ -45,7 +52,7 @@ int gety()
 
 void clr(char fore, char back)
 {
-	uint16* vga_mem = (uint16*)VGA_START_ADDR;
+	uint16* vga_mem = (uint16*)video_frame_buf;
 	for (int i = 0; i < VGA_HEIGHT * VGA_WIDTH; i++)
 	{
 		vga_mem[i] = (((uint16)((back << 4) | fore)) << 8) | 0x20;
@@ -55,7 +62,7 @@ void clr(char fore, char back)
 
 void screen_scroll(int lines)
 {
-	char* vag_start = (char*)VGA_START_ADDR;
+	char* vag_start = (char*)video_frame_buf;
 	char* start_line = vag_start + lines* VGA_WIDTH * 2;
 	int     scroll_lines = VGA_HEIGHT - lines;
 	int     scroll_size = scroll_lines*VGA_WIDTH * 2;
@@ -96,7 +103,7 @@ void putchar(int x, int y, char ch, char fore, char back)
 		x = 0;
 	}
 
-	byte* addr = (byte*)VGA_START_ADDR + (y*VGA_WIDTH + x) * 2;
+	byte* addr = (byte*)video_frame_buf + (y*VGA_WIDTH + x) * 2;
 	*addr++ = ch;
 	*addr = (back << 4) | fore;
 	x++;

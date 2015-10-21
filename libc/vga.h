@@ -1,7 +1,7 @@
 #pragma once
 #include "typedef.h"
 
-#define		VGA_START_ADDR		(0x000b8000) 
+#define		VGA_BUFFER_ADDRESS (0x000b8000) 
 #define		VGA_WIDTH		   80
 #define		VGA_HEIGHT		   25
 
@@ -22,6 +22,7 @@
 #define	VGA_LIGHT_BROWN			14
 #define	VGA_WHITE							15
 
+void init_vga(void* vga_buffer);
 int  getx();
 int  gety();
 void gotoxy(int x, int y);

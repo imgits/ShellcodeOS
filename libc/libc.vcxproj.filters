@@ -68,5 +68,13 @@
     <ClInclude Include="stdio.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="intrin.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="intrin.asm">
+      <Filter>源文件</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

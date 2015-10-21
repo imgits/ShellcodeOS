@@ -32,17 +32,32 @@ uint32 load_kernel(byte boot_driver)
 		__asm jmp $
 	}
 	printf("Open %s OK\n", os_kernel);
-	printf("start_cluster=%X, size=%d\n", file.start_cluster, file.size);
+	
+	//加载PE头，主要是为了获取SizeOfImage，以便分配足够的内存空间
+	//因为file.size != SizeOfImage (可能)
+	//http://blog.csdn.net/wbcuc/article/details/6225344
+	//编译时添加选项/Gs32768，避免调用__chkstk
+	char pe_header[4096];
+	if (fat32.read_file(&file, pe_header, 4096) != 4096)
+	{
+		printf("Read OS image header failed\n");
+		__asm jmp $
+	}
+
+	PE pe(pe_header);
+	uint32 kernel_image_size = pe.ImageSize();
+	
+	printf("start_cluster=%X, file_size=%d image_size=%d\n", file.start_cluster, file.size, kernel_image_size);
 
 	//分配内核加载空间
-	void* os_kernel_buf = map_kernel_space(OS_KERNEL_BASE, file.size);
+	void* os_kernel_buf = map_kernel_space(OS_KERNEL_BASE, kernel_image_size);
 
 	if (fat32.load_file(&file, os_kernel_buf, file.size) != file.size)
 	{
 		printf("Load OS failed\n");
 		__asm jmp $
 	}
-	return file.size;
+	return kernel_image_size;
 }
 
 void	main(byte boot_driver, uint64 mem_size)
@@ -53,8 +68,7 @@ void	main(byte boot_driver, uint64 mem_size)
 
 	ACPI  acpi;
 
-	//acpi.Init();
-
+	acpi.Init();
 	//初始化页帧数据库
 	void* page_dir = init_page_frame_database(mem_size);
 
@@ -68,13 +82,13 @@ void	main(byte boot_driver, uint64 mem_size)
 		mov		cr0, eax
 	}
 
-	int kernel_size = load_kernel(boot_driver);
-	
+	int kernel_image_size = load_kernel(boot_driver);
+
 	typedef void (*kernel_main)(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max);
 
 	PE pe((void* )OS_KERNEL_BASE);
 	kernel_main os_main = (kernel_main)pe.EntryPoint();
-	os_main(kernel_size, g_page_frame_min, g_page_frame_max);
+	os_main(kernel_image_size, g_page_frame_min, g_page_frame_max);
 
 	__asm jmp $
 }

@@ -46,7 +46,7 @@ void GDT::Init()
 		retf
 		flush_cs :
 	}
-
+	printf("GDT::Init() OK\n");
 }
 
 //设置Global Descriptor Table项
@@ -124,7 +124,7 @@ uint32 GDT::add_call_gate(void* handler, int argc)
 	uint32 base = (uint32)handler;
 
 	desc->offset_low = base & 0xFFFF;
-	desc->selector = GDT_KERNEL_CODE;	//系统代码段
+	desc->selector = SEL_KERNEL_CODE;	//系统代码段
 	desc->dcount = argc;
 	desc->attr = DA_386CGate | DA_DPL3;
 	desc->offset_high = (base >> 16) & 0xFFFF;

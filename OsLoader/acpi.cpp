@@ -124,7 +124,6 @@ void ACPI::ParseXSDT(ACPI_XSDT *xsdt)
 		ACPI_HEADER* dt = (ACPI_HEADER*)xsdt->DescriptionTable[i];
 		ParseDT(dt);
 	}
-
 }
 
 //
@@ -179,38 +178,33 @@ void ACPI::ParseAPIC(ACPI_MADT *madt)
 		APIC_HEADER *header = (APIC_HEADER *)p;
 		u8 type = header->type;
 		u8 length = header->length;
+		IO_APIC *io_apic;
+		LOCAL_APIC *local_apic;
+		APIC_INT_OVERRIDE *apic_int_override;
 		switch (type)
 		{
 		case APIC_TYPE_LOCAL_APIC:
-		{
-			LOCAL_APIC *s = (LOCAL_APIC *)p;
-
-			printf("Found CPU: %d %d %x\n", s->acpiProcessorId, s->apicId, s->flags);
+			local_apic = (LOCAL_APIC *)p;
+			printf("Found CPU: %d %d %x\n", local_apic->acpiProcessorId, local_apic->apicId, local_apic->flags);
 			if (g_acpiCpuCount < MAX_CPU_COUNT)
 			{
-				g_acpiCpuIds[g_acpiCpuCount] = s->apicId;
+				g_acpiCpuIds[g_acpiCpuCount] = local_apic->apicId;
 				++g_acpiCpuCount;
 			}
 			break;
-		}
 		case APIC_TYPE_IO_APIC:
-		{
-			IO_APIC *s = (IO_APIC *)p;
-
-			printf("Found I/O APIC: %d 0x%08x %d\n", s->ioApicId, s->ioApicAddress, s->globalSystemInterruptBase);
-			g_ioApicAddr = (u8 *)(uintptr_t)s->ioApicAddress;
+			io_apic = (IO_APIC *)p;
+			printf("Found I/O APIC: %d 0x%08x %d\n", io_apic->ioApicId, io_apic->ioApicAddress, io_apic->globalSystemInterruptBase);
+			g_ioApicAddr = (u8 *)(uintptr_t)io_apic->ioApicAddress;
 			break;
-		}
 		case APIC_TYPE_INTERRUPT_OVERRIDE:
-		{
-			APIC_INT_OVERRIDE *s = (APIC_INT_OVERRIDE *)p;
-			printf("Found Interrupt Override: %d %d %d 0x%04x\n", s->bus, s->source, s->interrupt, s->flags);
+			apic_int_override = (APIC_INT_OVERRIDE *)p;
+			printf("Found Interrupt Override: %d %d %d 0x%04x\n", 
+				apic_int_override->bus, apic_int_override->source, apic_int_override->interrupt, apic_int_override->flags);
 			break;
-		}
 		default:
-		{
 			printf("Unknown APIC structure %d\n", type);
-		}
+			break;
 		}
 
 		p += length;

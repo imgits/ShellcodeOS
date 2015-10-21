@@ -4,13 +4,13 @@
 #define GDT_TO_SEL(gdt) ((gdt) << 3)
 
 #define GDT_NULL			0
-#define GDT_KERNEL_CODE		1
-#define GDT_KERNEL_DATA		2
+#define GDT_KERNEL_CODE	1
+#define GDT_KERNEL_DATA	2
 #define GDT_USER_CODE		3
 #define GDT_USER_DATA		4
-#define GDT_USER_FS			5
-#define GDT_SYS_TSS			6
-#define GDT_TIB				7
+#define GDT_USER_FS		5
+#define GDT_SYS_TSS		6
+#define GDT_TIB			7
 #define GDT_AUX1			8
 #define GDT_APM40			9
 #define GDT_APMCS			10
@@ -21,7 +21,16 @@
 #define GDT_PNPTHUNK		15
 #define GDT_AUX2			16
 
+#define SEL_KERNEL_CODE	0x08
+#define SEL_KERNEL_DATA	0x10
+#define SEL_USER_CODE		0x18
+#define SEL_USER_DATA		0x20
+#define SEL_USER_FS		0x28
+#define SEL_SYS_TSS		0x30
+#define SEL_TIB			0x38
+
 #define MAX_GDT_NUM				32
+
 
 /* 描述符类型值说明 */
 #define	DA_16			0x0000	/* 16 位段				*/
@@ -37,7 +46,7 @@
 #define	DA_DR			0x90	/* 存在的只读数据段类型值		*/
 #define	DA_DRW			0x92	/* 存在的可读写数据段属性值		*/
 #define	DA_DRWA			0x93	/* 存在的已访问可读写数据段类型值	*/
-#define	DA_C			0x98	/* 存在的只执行代码段属性值		*/
+#define	DA_C				0x98	/* 存在的只执行代码段属性值		*/
 #define	DA_CR			0x9A	/* 存在的可执行可读代码段属性值		*/
 #define	DA_CCO			0x9C	/* 存在的只执行一致代码段属性值		*/
 #define	DA_CCOR			0x9E	/* 存在的可执行可读一致代码段属性值	*/

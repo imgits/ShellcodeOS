@@ -262,26 +262,26 @@ void  INTERRUPT simd_fpu_fault_0x13()
 
 void Exception::Init(IDT* idt)
 {
-	idt->set_idt_entry(0, DA_386TGate, divide_by_zero_fault_0x00);
-	idt->set_idt_entry(1, DA_386TGate, single_step_trap_0x01);
-	idt->set_idt_entry(2, DA_386TGate, nmi_trap_0x02);
-	idt->set_idt_entry(3, DA_386TGate, breakpoint_trap_0x03);
-	idt->set_idt_entry(4, DA_386TGate, overflow_trap_0x04);
-	idt->set_idt_entry(5, DA_386TGate, bounds_check_fault_0x05);
-	idt->set_idt_entry(6, DA_386TGate, invalid_opcode_fault_0x06);
-	idt->set_idt_entry(7, DA_386TGate, no_device_fault_0x07);
-	idt->set_idt_entry(8, DA_386TGate, double_fault_abort_0x08);
-	idt->set_idt_entry(9, DA_386TGate, invalid_tss_fault_0x09);
-	idt->set_idt_entry(10, DA_386TGate, invalid_tss_fault_0x0A);
-	idt->set_idt_entry(11, DA_386TGate, no_segment_fault_0x0B);
-	idt->set_idt_entry(12, DA_386TGate, stack_fault_0x0C);
-	idt->set_idt_entry(13, DA_386TGate, general_protection_fault_0x0D);
-	idt->set_idt_entry(14, DA_386TGate, page_fault_0x0E);
+	//idt->set_idt_entry(0, DA_386TGate, divide_by_zero_fault_0x00);
+	//idt->set_idt_entry(1, DA_386TGate, single_step_trap_0x01);
+	//idt->set_idt_entry(2, DA_386TGate, nmi_trap_0x02);
+	//idt->set_idt_entry(3, DA_386TGate, breakpoint_trap_0x03);
+	//idt->set_idt_entry(4, DA_386TGate, overflow_trap_0x04);
+	//idt->set_idt_entry(5, DA_386TGate, bounds_check_fault_0x05);
+	//idt->set_idt_entry(6, DA_386TGate, invalid_opcode_fault_0x06);
+	//idt->set_idt_entry(7, DA_386TGate, no_device_fault_0x07);
+	//idt->set_idt_entry(8, DA_386TGate, double_fault_abort_0x08);
+	//idt->set_idt_entry(9, DA_386TGate, invalid_tss_fault_0x09);
+	//idt->set_idt_entry(10, DA_386TGate, invalid_tss_fault_0x0A);
+	//idt->set_idt_entry(11, DA_386TGate, no_segment_fault_0x0B);
+	//idt->set_idt_entry(12, DA_386TGate, stack_fault_0x0C);
+	//idt->set_idt_entry(13, DA_386TGate, general_protection_fault_0x0D);
+	//idt->set_idt_entry(14, DA_386TGate, page_fault_0x0E);
 
-	idt->set_idt_entry(16, DA_386TGate, fpu_fault_0x10);
-	idt->set_idt_entry(17, DA_386TGate, alignment_check_fault_0x11);
-	idt->set_idt_entry(18, DA_386TGate, machine_check_abort_0x12);
-	idt->set_idt_entry(19, DA_386TGate, simd_fpu_fault_0x13);
+	//idt->set_idt_entry(16, DA_386TGate, fpu_fault_0x10);
+	//idt->set_idt_entry(17, DA_386TGate, alignment_check_fault_0x11);
+	//idt->set_idt_entry(18, DA_386TGate, machine_check_abort_0x12);
+	//idt->set_idt_entry(19, DA_386TGate, simd_fpu_fault_0x13);
 }
 
 

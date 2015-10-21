@@ -149,6 +149,7 @@ public:
 	int		strcmp_nocase(const char* str1, const char * str2);
 	bool		search_dir_entry(const char* entry_name, uint32& start_cluster, uint32 &file_size);
 	bool		open_file(FILE_OBJECT *file, const char* filename);
+	uint32	read_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize);
 	uint32	load_file(FILE_OBJECT *file, void* filebuf, uint32 bufsize);
 };
 

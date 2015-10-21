@@ -31,6 +31,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -93,13 +94,20 @@
   <ItemGroup>
     <ClInclude Include="c++.h" />
     <ClInclude Include="Fat32.h" />
+    <ClInclude Include="intrin.h" />
     <ClInclude Include="liballoc.h" />
     <ClInclude Include="pe.h" />
     <ClInclude Include="stdio.h" />
     <ClInclude Include="vga.h" />
     <ClInclude Include="vsprintf.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="intrin.asm">
+      <FileType>Document</FileType>
+    </MASM>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>
