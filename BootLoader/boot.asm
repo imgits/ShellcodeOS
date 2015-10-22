@@ -11,14 +11,14 @@
 
 %define  MEMORY_PARAMS					0x00007e00
 %define  MEM_MAP_COUNT					0x00007e00 ;将内存分布数据存放于此处,以便kernel_main中进行处理
-%define  MEM_MAP_BUF			  			0x00007e04
+%define  MEM_MAP_BUF		  			0x00007e04
 
 %define  DISK_INFO						0x00008000
 %define  BOOT_LOAD_DRIVER				0x00008000
 %define  DISK_INFO_DRIVER				0x00008000
 %define  DISK_INFO_TYPE					0x00008001
-%define  DISK_INFO_CYLINDERS				0x00008002
-%define  DISK_INFO_HEADS					0x00008004
+%define  DISK_INFO_CYLINDERS			0x00008002
+%define  DISK_INFO_HEADS				0x00008004
 %define  DISK_INFO_SECTORS				0x00008005
 %define  DISK_PARAM_SEG					0x00008006
 %define  DISK_PARAM_OFFSET				0x00008008
@@ -270,17 +270,17 @@ print_hex:
 		 ;ret
 
 ;-------------------------------------------------------------------------------
-			align   8
+align   8
 GDT32:
 			dq	0x0000000000000000
 .code32		equ  $ - GDT32
 		    dq	0x00cf9A000000ffff
 .data32		equ  $ - GDT32
 			dq	0x00cf92000000ffff
-;.real_code  equ  $ - GDT32
-;			dq	0x000f9A000000ffff
-;.real_data  equ  $ - GDT32
-;			dq	0x000f92000000ffff
+.real_code  equ  $ - GDT32
+			dq	0x00009A010000ffff
+.real_data  equ  $ - GDT32
+			dq	0x000092010000ffff
 
 GDTR		dw	$ - GDT32 - 1
 			dd	GDT32 ;GDT的物理/线性地址
@@ -289,7 +289,8 @@ IDTR		dw	0
 			dd	0 ;IDT的物理/线性地址
 
 ; Message strings
-boot_msg			db      'BootStrap booting ',13,10,0
+;boot_msg			db      'BootStrap booting ',13,10,0
+boot_msg			db      'Booting ',13,10,0
 get_disk_params_msg db      'Get disk params ',0
 load_osloader_msg	db		'Load BootLoader ',0
 check_memory_msg	db		'Get memory map ',0

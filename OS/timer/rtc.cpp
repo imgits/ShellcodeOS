@@ -23,7 +23,6 @@ bool RTC::Init()
 	prev = inportb(0x71);			// get initial value of register A
 	outportb(0x70, 0x8A);			// reset index to A
 	outportb(0x71, (prev & 0xF0) | rate); //write only our rate to A. Note, rate is the bottom 4 bits.
-	printf("prevA=%X\n", prev);
 
 	m_tick_count = 0;
 	PIC::register_irq(IRQ_RTC, RTC::irq_handler);
@@ -41,9 +40,9 @@ void		RTC::irq_handler(PIC_IRQ_CONTEXT* context)
 	case 2: setchar(x, y, '|', color, 0);break;
 	case 3: setchar(x, y, '/', color, 0);break;
 	}
-	PIC::dump_pic_irq_context(context);
+	//PIC::dump_pic_irq_context(context);
 	//What is important is that if register C is not read after an IRQ 8, 
 	//then the interrupt will not happen again.
-	//outportb(0x70, 0x0c); //¶ÁRTC¼Ä´æÆ÷C£¬¸´Î»Î´¾öµÄÖÐ¶Ï×´Ì¬
-	//inportb(0x71);
+	outportb(0x70, 0x0c); //¶ÁRTC¼Ä´æÆ÷C£¬¸´Î»Î´¾öµÄÖÐ¶Ï×´Ì¬
+	inportb(0x71);
 }

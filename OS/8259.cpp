@@ -2,8 +2,6 @@
 #include "gdt.h"
 #include "stdio.h"
 
-PIC_IRQ_HANDLER PIC::m_irq_handlers[16] = { 0 };
-
 #define PIC_IRQ_ENTRY(irq_id) \
 void  __declspec(naked) pic_irq_entry_##irq_id() \
 { \
@@ -19,7 +17,8 @@ void  __declspec(naked) pic_irq_entry_##irq_id() \
 	__asm	iretd \
 }
 
-//32-255 用户定义中断
+//硬件中断例程入口
+
 PIC_IRQ_ENTRY(0x00)
 PIC_IRQ_ENTRY(0x01)
 PIC_IRQ_ENTRY(0x02)
@@ -38,31 +37,10 @@ PIC_IRQ_ENTRY(0x0D)
 PIC_IRQ_ENTRY(0x0E)
 PIC_IRQ_ENTRY(0x0F)
 
-void* pic_irq_entries[16]
-{
-	pic_irq_entry_0x00,
-	pic_irq_entry_0x01,
-	pic_irq_entry_0x02,
-	pic_irq_entry_0x03,
-	pic_irq_entry_0x04,
-	pic_irq_entry_0x05,
-	pic_irq_entry_0x06,
-	pic_irq_entry_0x07,
-	pic_irq_entry_0x08,
-	pic_irq_entry_0x09,
-	pic_irq_entry_0x0A,
-	pic_irq_entry_0x0B,
-	pic_irq_entry_0x0C,
-	pic_irq_entry_0x0D,
-	pic_irq_entry_0x0E,
-	pic_irq_entry_0x0F
-};
+PIC_IRQ_HANDLER PIC::m_irq_handlers[16] = { 0 };
 
 void PIC::irq_dispatch(PIC_IRQ_CONTEXT* context)
 {
-	static int Counter = 0;
-	static int CounterSec = 0;
-	static int Timer = 0;
 	int irq_id = context->int_id;
 	PIC_IRQ_HANDLER irq_handler = m_irq_handlers[irq_id];
 	if (irq_handler != NULL)

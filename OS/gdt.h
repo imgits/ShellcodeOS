@@ -1,3 +1,4 @@
+//http://wiki.osdev.org/GDT_Tutorial
 #pragma once
 #include "typedef.h"
 

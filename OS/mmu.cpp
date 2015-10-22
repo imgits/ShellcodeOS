@@ -10,9 +10,8 @@ MMU::~MMU()
 {
 }
 
-void MMU::Init(PAGE_FRAME_DB* page_frame_db)
+void MMU::Init()
 {
-	m_page_frame_db = page_frame_db;
 }
 
 uint32 MMU::map_memory(uint32 virtual_addr, uint32 physical_addr, uint32 size)
@@ -32,7 +31,7 @@ uint32 MMU::map_memory(uint32 virtual_addr, uint32 physical_addr, uint32 size)
 		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
 		if (page_dir[pd_index] == 0)
 		{
-			uint32  page_table_PA = m_page_frame_db->alloc_physical_page();
+			uint32  page_table_PA = PAGE_FRAME_DB::alloc_physical_page();
 			page_dir[pd_index] = page_table_PA | PT_PRESENT | PT_WRITABLE;
 			memset(page_table_VA, 0, PAGE_SIZE);
 		}

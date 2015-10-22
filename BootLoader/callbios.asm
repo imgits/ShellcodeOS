@@ -49,34 +49,25 @@ struc regs16_t
 	.ef resw 1
 endstruc
 
-%define INT32_BASE                             0x7C00
-%define REBASE(x)                              (((x) - reloc) + INT32_BASE)
-%define GDTENTRY(x)                            ((x) << 3)
-%define CODE32                                 GDTENTRY(1)	; 0x08
-%define DATA32                                 GDTENTRY(2)	; 0x10
-%define CODE16                                 GDTENTRY(3)	; 0x18
-%define DATA16                                 GDTENTRY(4)	; 0x20
-%define STACK16                                (INT32_BASE - regs16_t_size)
+%define MODULE_SEG                             0x1000
+%define MODULE_BASE                            0x10000
+%define REBASE(x)                              (((x) - reloc) + MODULE_BASE)
+%define CODE32                                 0x08
+%define DATA32                                 0x10
+%define CODE16                                 0x18
+%define DATA16                                 0x20
+%define STACK16                                (MODULE_BASE - regs16_t_size)
 
 
-        ;ORG     0x7C00
         SECTION .text
 	callbios: use32                               ; by Napalm
 	_callbios:
-		cli                                    ; disable interrupts
-		pusha                                  ; save register state to 32bit stack
-		mov  esi, reloc                        ; set source to code below
-		mov  edi, INT32_BASE                   ; set destination to new base address
-		mov  ecx, (callbios_end - reloc)          ; set copy size to our codes size
-		cld                                    ; clear direction flag (so we copy forward)
-		rep  movsb                             ; do the actual copy (relocate code to low 16bit space)
-		push INT32_BASE
-		ret
-		;jmp INT32_BASE                         ; jump to new code location
-	reloc: use32                               ; by Napalm
+	reloc:
+		cli
 		mov  [REBASE(stack32_ptr)], esp        ; save 32bit stack pointer
 		sidt [REBASE(idt32_ptr)]               ; save 32bit idt pointer
 		sgdt [REBASE(gdt32_ptr)]               ; save 32bit gdt pointer
+		
 		lgdt [REBASE(gdt16_ptr)]               ; load 16bit gdt pointer
 		lea  esi, [esp+0x24]                   ; set position of intnum on 32bit stack
 		lodsd                                  ; read intnum into eax
@@ -87,6 +78,7 @@ endstruc
 		mov  esp, edi                          ; save destination to as 16bit stack offset
 		rep  movsb                             ; do the actual copy (32bit stack to 16bit stack)
 		jmp  word CODE16:REBASE(p_mode16)      ; switch to 16bit selector (16bit protected mode)
+
 	p_mode16: use16
 		mov  ax, DATA16                        ; get our 16bit data selector
 		mov  ds, ax                            ; set ds to 16bit selector
@@ -94,17 +86,20 @@ endstruc
 		mov  fs, ax                            ; set fs to 16bit selector
 		mov  gs, ax                            ; set gs to 16bit selector
 		mov  ss, ax                            ; set ss to 16bit selector
+
 		mov  eax, cr0                          ; get cr0 so we can modify it
 		and  al,  ~0x01                        ; mask off PE bit to turn off protected mode
 		mov  cr0, eax                          ; set cr0 to result
-		jmp  word 0x0000:REBASE(r_mode16)      ; finally set cs:ip to enter real-mode
+
+		jmp  word MODULE_SEG:REBASE(r_mode16)      ; finally set cs:ip to enter real-mode
+
 	r_mode16: use16
 		xor  ax, ax                            ; set ax to zero
 		mov  ds, ax                            ; set ds so we can access idt16
 		mov  ss, ax                            ; set ss so they the stack is valid
 		lidt [REBASE(idt16_ptr)]               ; load 16bit idt
-		mov  bx, 0x0870                        ; master 8 and slave 112
-		call resetpic                          ; set pic's the to real-mode settings
+		;mov  bx, 0x0870                        ; master 8 and slave 112
+		;call resetpic                          ; set pic's the to real-mode settings
 		popa                                   ; load general purpose registers from 16bit stack
 		pop  gs                                ; load gs from 16bit stack
 		pop  fs                                ; load fs from 16bit stack
@@ -116,7 +111,7 @@ endstruc
 		cli                                    ; disable interrupts
 		xor  sp, sp                            ; zero sp so we can reuse it
 		mov  ss, sp                            ; set ss so the stack is valid
-		mov  sp, INT32_BASE                    ; set correct stack position so we can copy back
+		mov  sp, MODULE_BASE                    ; set correct stack position so we can copy back
 		pushf                                  ; save eflags to 16bit stack
 		push ds                                ; save ds to 16bit stack
 		push es                                ; save es to 16bit stack

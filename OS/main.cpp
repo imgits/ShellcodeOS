@@ -19,7 +19,7 @@
 #include "keyboard.h"
 #include "rtc.h"
 
-PAGE_FRAME_DB  page_frame_db;
+//PAGE_FRAME_DB  page_frame_db;
 CPU			  cpu;
 GDT			  gdt;
 IDT			  idt;
@@ -34,8 +34,9 @@ void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 	puts("Shellcode OS is starting...\n", 30);
 
 	CppInit();
-	page_frame_db.init(page_frame_min, page_frame_max);
-	mmu.Init(&page_frame_db);
+	PAGE_FRAME_DB::Init(page_frame_min, page_frame_max);
+	
+	mmu.Init();
 
 	//ACPI acpi;
 	//acpi.Init(&mmu);

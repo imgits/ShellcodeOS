@@ -1,7 +1,6 @@
 //http://wiki.osdev.org/RTC
 //Real Time Clock and Memory: http://stanislavs.org/helppc/cmos_ram.html
 #pragma once
-#include "idt.h"
 #include "8259.h"
 
 class RTC

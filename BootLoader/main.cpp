@@ -141,6 +141,15 @@ void main(disk_info* disk, memory_info* mem_info)
 	printf("disk driver=%d,type=%d, cylinders=%d, heads=%d, sectors=%d\n", 
 		disk->driver, disk->type, disk->cylinders, disk->heads, disk->sectors);
 	
+	//bios_print_string("Call BIOS OK\n");
+
+	int drive= disk->driver, cyls, heads, sects;
+	
+	bios_get_drive_params(drive, &cyls, &heads, &sects);
+	printf("BIOS driver=%d,cylinders=%d, heads=%d, sectors=%d\n",
+		drive, cyls, heads, sects);
+
+
 	//disk_params* params = (disk_params*)((((uint32)disk->params_seg)<<4) + disk->params_offset);
 	//printf("disk_param=%X seg=%X offset=%X size = %d\n", params, disk->params_seg, disk->params_offset, params->size);
 

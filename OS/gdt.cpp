@@ -26,9 +26,11 @@ void GDT::Init()
 	// 用户态线程使用
 	set_gdt_entry(GDT_USER_CODE, 0x00000000, 0x0007FFFF, DA_CR  | DA_32 | DA_DPL3 | DA_LIMIT_4K);
 	set_gdt_entry(GDT_USER_DATA, 0x00000000, 0x0007FFFF, DA_DRW | DA_32 | DA_DPL3 | DA_LIMIT_4K);
-	set_gdt_entry(GDT_USER_FS, 0X7EFDD000, 0x0000FFFF, DA_DRW | DA_32 | DA_DPL3);
+	set_gdt_entry(GDT_USER_FS, 0x7EFDD000, 0x0000FFFF,   DA_DRW | DA_32 | DA_DPL3);
+	set_gdt_entry(GDT_USER_FS+1, 0x00010000, 0x0000FFFF, DA_CR  | DA_16 | DA_DPL0);
+	set_gdt_entry(GDT_USER_FS+2, 0x00010000, 0x0000FFFF, DA_DRW | DA_16 | DA_DPL0);
 
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < 8; i++)
 	{
 		printf("GDT[%d]: %016llX\n", i, *(uint64*)&m_gdt[i]);
 	}
@@ -40,7 +42,14 @@ void GDT::Init()
 	{
 		lgdt gdtr
 		//jmp  0x08:flush_cs
-		push 0x08
+		mov  eax,SEL_KERNEL_DATA
+		mov  ds, ax
+		mov  es, ax
+		mov  fs, ax
+		mov  gs, ax
+		mov  ss, ax
+
+		push SEL_KERNEL_CODE
 		push flush_cs
 		retf
 		flush_cs :

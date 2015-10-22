@@ -51,7 +51,7 @@
         global _vesa_set_mode
 
 ; OS Loader base address
-OSLDRSEG    equ 0x0000
+OSLDRSEG    equ 0x1000
 OSLDRBASE   equ (OSLDRSEG * 16)
 
 ; Segment selectors for data and code in real and protected mode
@@ -69,6 +69,7 @@ REAL_STACK  equ (0x2000 - 0x10)
 ;
 ; Switch from protected to real mode
 ;
+
 
 prot2real:
 _prot2real:
@@ -104,7 +105,7 @@ _prot2real:
         mov     ss, ax
 
         ; Transition to 16 bit segment
-        jmp     REAL_CSEG:start16 ;(LOCAL(start16))
+        jmp     REAL_CSEG:LOCAL(start16)
 
 start16:
         BITS    16
@@ -115,7 +116,7 @@ start16:
         mov     cr0, eax
 
         ; Reload code segment register and clear prefetch
-        jmp     dword OSLDRSEG:realmode;(LOCAL(realmode))
+        jmp     dword OSLDRSEG:LOCAL(realmode)
 
 realmode:
 
@@ -129,7 +130,7 @@ realmode:
         mov     ss, ax
         
         ; Load real mode IDT
-        a32 lidt [real_idt];[LOCAL(real_idt)]
+        a32 lidt [LOCAL(real_idt)]
 
         ; Return on the real mode stack
         sti
@@ -148,8 +149,8 @@ _real2prot:
         ; Restore protected mode descriptors
         mov     ax, OSLDRSEG
         mov     ds, ax
-        a32 lidt    [prot_idt];[LOCAL(prot_idt)]
-        a32 lgdt    [prot_gdt];[LOCAL(prot_gdt)]
+        a32 lidt    [LOCAL(prot_idt)]
+        a32 lgdt    [LOCAL(prot_gdt)]
 
         ; Enable protected mode
         mov     eax, cr0

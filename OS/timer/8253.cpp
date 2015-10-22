@@ -29,14 +29,16 @@ void	PIT::irq_handler(PIC_IRQ_CONTEXT* context)
 	{
 		m_counter = 0;
 		m_timer++;
+
+		int x = 79, y = 0;
+		int color = 10;
 		switch (m_timer % 4)
 		{
-		case 0: setchar(79, 0, '-', 10, 0);break;
-		case 1: setchar(79, 0, '\\', 10, 0);break;
-		case 2: setchar(79, 0, '|', 10, 0);break;
-		case 3: setchar(79, 0, '/', 10, 0);break;
+		case 0: setchar(x, y, '-', color, 0);break;
+		case 1: setchar(x, y, '\\', color, 0);break;
+		case 2: setchar(x, y, '|', color, 0);break;
+		case 3: setchar(x, y, '/', color, 0);break;
 		}
-		
 	}
 	for (int i = 0; i < MAX_PIT_HANDLERS; i++)
 	{

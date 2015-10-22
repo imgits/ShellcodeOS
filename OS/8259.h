@@ -43,7 +43,6 @@ struct PIC_IRQ_CONTEXT
 	uint32	ecx;
 	uint32	eax;
 	uint32	int_id;
-	//uint32	error_code;
 	uint32	eip;
 	uint32	cs;
 	uint32  eflags;
@@ -58,10 +57,10 @@ class PIC
 private:
 	static PIC_IRQ_HANDLER m_irq_handlers[16];
 public:
-	static void	Init(IDT* idt);
-	static void	enable_irq(int irq);
-	static void	disable_irq(int irq);
-	static void  irq_dispatch(PIC_IRQ_CONTEXT* context);
-	static bool	register_irq(int irq_no, PIC_IRQ_HANDLER irq_handler);
-	static void  dump_pic_irq_context(PIC_IRQ_CONTEXT* context);
+	static void		Init(IDT* idt);
+	static void		enable_irq(int irq);
+	static void		disable_irq(int irq);
+	static void		irq_dispatch(PIC_IRQ_CONTEXT* context);
+	static bool		register_irq(int irq_no, PIC_IRQ_HANDLER irq_handler);
+	static void		dump_pic_irq_context(PIC_IRQ_CONTEXT* context);
 };

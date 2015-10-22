@@ -5,9 +5,9 @@
 #pragma once
 #include "8259.h"
 
-#define	MAX_PIT_HANDLERS		100
+#define	MAX_PIT_HANDLERS	100
 #define	PIT_CLOCK			1193180
-#define	TIMER_FREQ			20	
+#define	TIMER_FREQ			100	
 
 typedef bool(*TIMER_HANDLER)(uint32 timer_id);
 
