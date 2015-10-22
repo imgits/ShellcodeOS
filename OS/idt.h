@@ -53,10 +53,14 @@ struct IDTR
 
 #define	MAX_IDT_NUM		256
 
-#define	IDT_TSS_GATE	0x89	/* 可用 386 任务状态段类型值		*/
-#define	IDT_CALL_GATE	0x8C	/* 386 调用门类型值			*/
-#define	IDT_INTR_GATE	0x8E	/* 386 中断门类型值			*/
-#define	IDT_TRAP_GATE	0x8F	/* 386 陷阱门类型值			*/
+#define	IDT_TSS_GATE		0x89	//可用 386 任务状态段类型值
+#define	IDT_CALL_GATE	0x8C	//调用门类型值
+#define	IDT_INTR_GATE	0x8E	//中断门类型值
+#define	IDT_TRAP_GATE	0x8F	//陷阱门类型值			*/
+//中断门和陷阱门的区别：http://blog.chinaunix.net/uid-9185047-id-445162.html
+//通过中断门进入中断时，处理器自动清除IF标志位，返回时从栈中恢复原始状态
+//通过陷阱门进入中断时，IF标志位保持不变
+
 
 class IDT
 {

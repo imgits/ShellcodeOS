@@ -5,7 +5,6 @@
 #include "stdio.h"
 
 //http://www.jamesmolloy.co.uk/tutorial_html/4.-The%20GDT%20and%20IDT.html
-
 GDT::GDT()
 {
 	memset(&m_gdt, 0, sizeof(m_gdt));
@@ -22,12 +21,12 @@ void GDT::Init()
 	/* 但这里有必要再做一次这个工作，便于管理。 */
 
 	// 初始化一个代码段和一个数据段，内核态的线程使用
-	set_gdt_entry(GDT_KERNEL_CODE, 0x00000000, 0x000FFFFF, DA_CR | DA_32 | DA_DPL0 | DA_LIMIT_4K); //
+	set_gdt_entry(GDT_KERNEL_CODE, 0x00000000, 0x000FFFFF, DA_CR  | DA_32 | DA_DPL0 | DA_LIMIT_4K); //
 	set_gdt_entry(GDT_KERNEL_DATA, 0x00000000, 0x000FFFFF, DA_DRW | DA_32 | DA_DPL0 | DA_LIMIT_4K);
 	// 用户态线程使用
-	set_gdt_entry(GDT_USER_CODE, 0x00000000, 0x0007FFFF, DA_CR | DA_32 | DA_DPL3 | DA_LIMIT_4K);
+	set_gdt_entry(GDT_USER_CODE, 0x00000000, 0x0007FFFF, DA_CR  | DA_32 | DA_DPL3 | DA_LIMIT_4K);
 	set_gdt_entry(GDT_USER_DATA, 0x00000000, 0x0007FFFF, DA_DRW | DA_32 | DA_DPL3 | DA_LIMIT_4K);
-	set_gdt_entry(GDT_USER_CODE, 0X7EFDD000, 0x0000FFFF, DA_DRW | DA_32 | DA_DPL3);
+	set_gdt_entry(GDT_USER_FS, 0X7EFDD000, 0x0000FFFF, DA_DRW | DA_32 | DA_DPL3);
 
 	for (int i = 0; i < 7; i++)
 	{

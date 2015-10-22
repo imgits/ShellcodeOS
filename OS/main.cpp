@@ -17,6 +17,7 @@
 #include "8253.h"
 #include "8259.h"
 #include "keyboard.h"
+#include "rtc.h"
 
 PAGE_FRAME_DB  page_frame_db;
 CPU			  cpu;
@@ -48,6 +49,7 @@ void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
 	trap.Init(&idt);
 	PIC::Init(&idt);
 	PIT::Init();
+	RTC::Init();
 	Keyboard::Init();
 	_enable();
 	__asm jmp $

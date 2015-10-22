@@ -61,7 +61,7 @@ public:
 	static void	Init(IDT* idt);
 	static void	enable_irq(int irq);
 	static void	disable_irq(int irq);
-	static void irq_dispatch(PIC_IRQ_CONTEXT* context);
+	static void  irq_dispatch(PIC_IRQ_CONTEXT* context);
 	static bool	register_irq(int irq_no, PIC_IRQ_HANDLER irq_handler);
-
+	static void  dump_pic_irq_context(PIC_IRQ_CONTEXT* context);
 };

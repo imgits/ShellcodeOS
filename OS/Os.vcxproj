@@ -61,7 +61,7 @@
       <SDLCheck>true</SDLCheck>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>../libc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./timer;../libc;</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <PreprocessorDefinitions>USE_DL_PREFIX;_X86_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
@@ -95,7 +95,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="8253.cpp" />
+    <ClCompile Include="timer\rtc.cpp" />
+    <ClCompile Include="timer\8253.cpp" />
     <ClCompile Include="acpi.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="trap.cpp" />
@@ -117,7 +118,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="8253.h" />
+    <ClInclude Include="timer\rtc.h" />
+    <ClInclude Include="timer\8253.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="trap.h" />

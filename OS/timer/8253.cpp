@@ -90,13 +90,5 @@ bool PIT::kill_timer(uint32 id)
 	return false;
 }
 
-//http://wiki.osdev.org/RTC
-//void PIC::init_cmos_timer()
-//{
-//	//设置和时钟中断相关的硬件 
-//	outportb(0x70, 0x0b | 0x80); // RTC寄存器B | 阻断NMI
-//	outportb(0x71, 0x12); //设置寄存器B，禁止周期性中断，开放更新结束后中断，BCD码，24小时制
-//	outportb(0x70, 0x0c); //读RTC寄存器C，复位未决的中断状态
-//	inportb(0x71);
-//}
+
 

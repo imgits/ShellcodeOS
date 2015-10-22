@@ -1,12 +1,13 @@
 //Programmable Interval Timer
 //http://wiki.osdev.org/PIT
+//"8042" PS/2 Controller:http://wiki.osdev.org/%228042%22_PS/2_Controller
 
 #pragma once
 #include "8259.h"
 
-#define MAX_PIT_HANDLERS		100
-#define PIT_CLOCK				1193180
-#define	TIMER_FREQ				20	
+#define	MAX_PIT_HANDLERS		100
+#define	PIT_CLOCK			1193180
+#define	TIMER_FREQ			20	
 
 typedef bool(*TIMER_HANDLER)(uint32 timer_id);
 

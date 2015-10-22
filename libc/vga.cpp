@@ -76,7 +76,12 @@ void screen_scroll(int lines)
 
 void putchar(int x, int y, char ch, char fore, char back)
 {
-	if (ch == 0x0d)
+	if (ch == 0x08)
+	{
+		if (x > 0) x--;
+		ch = ' ';
+	}
+	else if (ch == 0x0d)
 	{
 		x = 0;
 		gotoxy(x, y);
@@ -136,12 +141,13 @@ void puts(const char* str, char fore, char back)
 
 void setchar(int x, int y, char ch, char fore, char back)
 {
-	if (ch <= 0x20 || x >= VGA_WIDTH || y >= VGA_WIDTH) return;
-	byte* addr = (byte*)video_frame_buf + (y*VGA_WIDTH + x) * 2;
-	*addr++ = ch;
-	*addr = (back << 4) | fore;
+	if (ch > 0x20 &&  x >=0 && x < VGA_WIDTH && y >= 0 && y < VGA_HEIGHT)
+	{
+		byte* addr = (byte*)video_frame_buf + (y*VGA_WIDTH + x) * 2;
+		*addr++ = ch;
+		*addr = (back << 4) | fore;
+	}
 }
-
 
 #include "stdio.h"
 int __cdecl printf(const char *fmt, ...)

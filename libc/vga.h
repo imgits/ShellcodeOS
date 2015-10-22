@@ -34,4 +34,3 @@ void puts(const char* str, char fore = VGA_LIGHT_RED, char back = VGA_BLACK);
 void setchar(int x, int y, char ch, char fore, char back);
 
 
-

@@ -1,3 +1,5 @@
+//"8042" PS/2 Controller:http://wiki.osdev.org/%228042%22_PS/2_Controller
+
 #pragma once
 #include "typedef.h"
 #include "intrin.h"

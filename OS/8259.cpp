@@ -167,12 +167,10 @@ void PIC::disable_irq(int irq)
 	}
 }
 
-////http://wiki.osdev.org/RTC
-//void PIC::init_cmos_timer()
-//{
-//	//设置和时钟中断相关的硬件 
-//	outportb(0x70, 0x0b | 0x80); // RTC寄存器B | 阻断NMI
-//	outportb(0x71, 0x12); //设置寄存器B，禁止周期性中断，开放更新结束后中断，BCD码，24小时制
-//	outportb(0x70, 0x0c); //读RTC寄存器C，复位未决的中断状态
-//	inportb(0x71);
-//}
+void  PIC::dump_pic_irq_context(PIC_IRQ_CONTEXT* context)
+{
+	printf("cs:eip=%02X:%08X ss:esp=%02X:%08X int_id=%d\n",
+		context->cs, context->eip, context->ss, context->esp, context->int_id);
+	printf("eax=%08X ebx=%08X ecx=%08X edx=%08X\n", context->eax, context->ebx, context->ecx, context->edx);
+	printf("ebp=%08X edi=%08X esi=%08X eflags=%08X\n", context->ebp, context->edi, context->esi, context->eflags);
+}
