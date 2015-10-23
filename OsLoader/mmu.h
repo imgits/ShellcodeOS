@@ -48,5 +48,5 @@ struct OS_MEM
 };
 
 void*  init_page_frame_database(uint64 memsize);
-uint32 alloc_page_frame();
-void*  map_kernel_space(uint32 virtual_address, uint32 size);
+void*  alloc_memory(uint32 virtual_address, uint32 size);
+

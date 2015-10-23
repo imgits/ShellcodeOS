@@ -1,14 +1,13 @@
 #pragma once
 #include  "typedef.h"
 
-#define IRQ_ENTRY_WITH_ERROR(irq_no , irq_dispatch) \
+#define IRQ_ENTRY_WITH_ERROR(irq_no) \
 void  __declspec(naked) irq_entry_##irq_no() \
 { \
-	__asm	cli \
 	__asm	push		irq_no  /*中断请求向量*/ \
 	__asm	pushad \
 	__asm   push	esp \
-	__asm	call	irq_dispatch \
+	__asm   call	irq_dispatch \
 	__asm   add		esp, 4 \
 	__asm	popad \
 	__asm   add		esp,	4 \
@@ -33,6 +32,8 @@ void  __declspec(naked) irq_entry_##irq_no() \
 }
 
 #pragma pack(push, 1)
+
+
 // 门描述符
 typedef struct GATE_DESC
 {
@@ -60,7 +61,6 @@ struct IDTR
 //中断门和陷阱门的区别：http://blog.chinaunix.net/uid-9185047-id-445162.html
 //通过中断门进入中断时，处理器自动清除IF标志位，返回时从栈中恢复原始状态
 //通过陷阱门进入中断时，IF标志位保持不变
-
 
 class IDT
 {

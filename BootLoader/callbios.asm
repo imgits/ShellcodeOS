@@ -29,6 +29,9 @@
 ;   int32(0x10, &regs);
 ; 
 ; 
+;   pregs     <--esp + 8
+;   intnum    <--esp + 4
+;   eip       <--esp + 0
 [bits 32]
 
 global callbios, _callbios
@@ -51,35 +54,40 @@ endstruc
 
 %define MODULE_SEG                             0x1000
 %define MODULE_BASE                            0x10000
-%define REBASE(x)                              (((x) - reloc) + MODULE_BASE)
+%define REBASE(addr)                           (addr - MODULE_BASE)
 %define CODE32                                 0x08
 %define DATA32                                 0x10
 %define CODE16                                 0x18
 %define DATA16                                 0x20
-%define STACK16                                (MODULE_BASE - regs16_t_size)
+%define STACK16                                (0xfff0 - regs16_t_size)
+
 
 
         SECTION .text
-	callbios: use32                               ; by Napalm
+	callbios:                               ; by Napalm
 	_callbios:
-	reloc:
+	protect32_mode_entry:
+	    BITS 32 
 		cli
-		mov  [REBASE(stack32_ptr)], esp        ; save 32bit stack pointer
-		sidt [REBASE(idt32_ptr)]               ; save 32bit idt pointer
-		sgdt [REBASE(gdt32_ptr)]               ; save 32bit gdt pointer
+		mov  [pmode32_esp], esp        ; save 32bit stack pointer
+		sidt [pmode32_idtr]               ; save 32bit idt pointer
+		sgdt [pmode32_gdtr]               ; save 32bit gdt pointer
 		
-		lgdt [REBASE(gdt16_ptr)]               ; load 16bit gdt pointer
-		lea  esi, [esp+0x24]                   ; set position of intnum on 32bit stack
+		mov  ax,0x0c30
+		call putc32
+
+		lea  esi, [esp + 4]                   ; set position of intnum on 32bit stack
 		lodsd                                  ; read intnum into eax
-		mov  [REBASE(ib)], al                  ; set intrrupt immediate byte from our arguments 
+		mov  [intr + 1], al                  ; set intrrupt immediate byte from our arguments 
 		mov  esi, [esi]                        ; read regs pointer in esi as source
 		mov  edi, STACK16                      ; set destination to 16bit stack
 		mov  ecx, regs16_t_size                ; set copy size to our struct size
 		mov  esp, edi                          ; save destination to as 16bit stack offset
 		rep  movsb                             ; do the actual copy (32bit stack to 16bit stack)
-		jmp  word CODE16:REBASE(p_mode16)      ; switch to 16bit selector (16bit protected mode)
+		jmp  CODE16:REBASE(protect16_mode)      ; switch to 16bit selector (16bit protected mode)
 
-	p_mode16: use16
+	protect16_mode: 
+		BITS 16
 		mov  ax, DATA16                        ; get our 16bit data selector
 		mov  ds, ax                            ; set ds to 16bit selector
 		mov  es, ax                            ; set es to 16bit selector
@@ -87,55 +95,63 @@ endstruc
 		mov  gs, ax                            ; set gs to 16bit selector
 		mov  ss, ax                            ; set ss to 16bit selector
 
+
 		mov  eax, cr0                          ; get cr0 so we can modify it
 		and  al,  ~0x01                        ; mask off PE bit to turn off protected mode
 		mov  cr0, eax                          ; set cr0 to result
 
-		jmp  word MODULE_SEG:REBASE(r_mode16)      ; finally set cs:ip to enter real-mode
+		jmp  dword MODULE_SEG:REBASE(real_mode)      ; finally set cs:ip to enter real-mode
 
-	r_mode16: use16
-		xor  ax, ax                            ; set ax to zero
+	real_mode: use16
+		mov  ax, MODULE_SEG                            ; set ax to zero
 		mov  ds, ax                            ; set ds so we can access idt16
 		mov  ss, ax                            ; set ss so they the stack is valid
-		lidt [REBASE(idt16_ptr)]               ; load 16bit idt
-		;mov  bx, 0x0870                        ; master 8 and slave 112
-		;call resetpic                          ; set pic's the to real-mode settings
+
+		mov  ax,0x0c31
+		call putc16
+		
+
+		a32 lidt [REBASE(rmode16_idtr)]               ; load 16bit idt
+		;mov  bx, 0x0870                         ; master 8 and slave 112
+		;call resetpic                           ; set pic's the to real-mode settings
 		popa                                   ; load general purpose registers from 16bit stack
 		pop  gs                                ; load gs from 16bit stack
 		pop  fs                                ; load fs from 16bit stack
 		pop  es                                ; load es from 16bit stack
 		pop  ds                                ; load ds from 16bit stack
 		sti                                    ; enable interrupts
-		db 0xCD                                ; opcode of INT instruction with immediate byte
-	ib: db 0x00
+		jmp $ 
+	intr:	
+	    int 0x00                               ; opcode of INT instruction with immediate byte
 		cli                                    ; disable interrupts
 		xor  sp, sp                            ; zero sp so we can reuse it
 		mov  ss, sp                            ; set ss so the stack is valid
-		mov  sp, MODULE_BASE                    ; set correct stack position so we can copy back
+		mov  sp, STACK16                       ; set correct stack position so we can copy back
 		pushf                                  ; save eflags to 16bit stack
 		push ds                                ; save ds to 16bit stack
 		push es                                ; save es to 16bit stack
 		push fs                                ; save fs to 16bit stack
 		push gs                                ; save gs to 16bit stack
 		pusha                                  ; save general purpose registers to 16bit stack
-		mov  bx, 0x2028                        ; master 32 and slave 40
-		call resetpic                          ; restore the pic's to protected mode settings
+		;mov  bx, 0x2028                        ; master 32 and slave 40
+		;call resetpic                          ; restore the pic's to protected mode settings
 		mov  eax, cr0                          ; get cr0 so we can modify it
 		inc  eax                               ; set PE bit to turn on protected mode
 		mov  cr0, eax                          ; set cr0 to result
-		jmp  dword CODE32:REBASE(p_mode32)     ; switch to 32bit selector (32bit protected mode)
-	p_mode32: use32
+		jmp  dword CODE32:REBASE(protect32_mode_leave)     ; switch to 32bit selector (32bit protected mode)
+	protect32_mode_leave: use32
 		mov  ax, DATA32                        ; get our 32bit data selector
 		mov  ds, ax                            ; reset ds selector
 		mov  es, ax                            ; reset es selector
 		mov  fs, ax                            ; reset fs selector
 		mov  gs, ax                            ; reset gs selector
 		mov  ss, ax                            ; reset ss selector
-		lgdt [REBASE(gdt32_ptr)]               ; restore 32bit gdt pointer
-		lidt [REBASE(idt32_ptr)]               ; restore 32bit idt pointer
-		mov  esp, [REBASE(stack32_ptr)]        ; restore 32bit stack pointer
-		mov  esi, STACK16                      ; set copy source to 16bit stack
-		lea  edi, [esp+0x28]                   ; set position of regs pointer on 32bit stack
+		lgdt [pmode32_gdtr]               ; restore 32bit gdt pointer
+		lidt [pmode32_idtr]               ; restore 32bit idt pointer
+		mov  esi, esp                      ; set copy source to 16bit stack
+		and  esi, 0xffff 
+		mov  esp, [pmode32_esp]        ; restore 32bit stack pointer
+		lea  edi, [esp+8]                   ; set position of regs pointer on 32bit stack
 		mov  edi, [edi]                        ; use regs pointer in edi as copy destination
 		mov  ecx, regs16_t_size                ; set copy size to our struct size
 		cld                                    ; clear direction flag (so we copy forward)
@@ -162,19 +178,35 @@ endstruc
 		out  0xA1, al                          ; send ICW4 to slave pic
 		pop  ax                                ; restore ax from stack
 		ret                                    ; return to caller
-		
+	
+putc16:
+	push ds
+	push bx
+	mov  bx, 0xb800
+	mov  ds, bx
+	mov  word [ds:0],	ax
+	pop  bx
+	pop  ds
+	ret
+
+putc32:
+	mov  [0xb8000],	ax
+	ret
+
+	pmode32_esp	dd	0x00000000
+
 	stack32_ptr:                               ; address in 32bit stack after we
 		dd 0x00000000                          ;   save all general purpose registers
 		
-	idt32_ptr:                                 ; IDT table pointer for 32bit access
+	pmode32_idtr:                                 ; IDT table pointer for 32bit access
 		dw 0x0000                              ; table limit (size)
 		dd 0x00000000                          ; table base address
 		
-	gdt32_ptr:                                 ; GDT table pointer for 32bit access
+	pmode32_gdtr:                                 ; GDT table pointer for 32bit access
 		dw 0x0000                              ; table limit (size)
 		dd 0x00000000                          ; table base address
 		
-	idt16_ptr:                                 ; IDT table pointer for 16bit access
+	rmode16_idtr:                                 ; IDT table pointer for 16bit access
 		dw 0x03FF                              ; table limit (size)
 		dd 0x00000000                          ; table base address
 		

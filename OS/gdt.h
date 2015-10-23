@@ -9,28 +9,21 @@
 #define GDT_KERNEL_DATA	2
 #define GDT_USER_CODE		3
 #define GDT_USER_DATA		4
-#define GDT_USER_FS		5
-#define GDT_SYS_TSS		6
-#define GDT_TIB			7
-#define GDT_AUX1			8
-#define GDT_APM40			9
-#define GDT_APMCS			10
-#define GDT_APMCS16			11
-#define GDT_APMDS			12
-#define GDT_PNPTEXT			13
-#define GDT_PNPDATA			14
-#define GDT_PNPTHUNK		15
-#define GDT_AUX2			16
+#define GDT_KERNEL_FS		5
+#define GDT_USER_FS		6
+#define GDT_SYS_TSS		7
+#define GDT_TIB			8
 
 #define SEL_KERNEL_CODE	0x08
 #define SEL_KERNEL_DATA	0x10
 #define SEL_USER_CODE		0x18
 #define SEL_USER_DATA		0x20
-#define SEL_USER_FS		0x28
-#define SEL_SYS_TSS		0x30
-#define SEL_TIB			0x38
+#define SEL_KERNEL_FS		0x28
+#define SEL_USER_FS		0x30
+#define SEL_SYS_TSS		0x38
+#define SEL_TIB			0x40
 
-#define MAX_GDT_NUM				32
+#define MAX_GDT_NUM		32
 
 
 /* 描述符类型值说明 */
@@ -72,7 +65,9 @@
 #define	SA_TIG		0
 #define	SA_TIL		4
 
-#define    USER_FS_BASE				0X7EFDD000
+#define    KERNEL_FS_BASE				0xFFDFF000
+#define    USER_FS_BASE				0x7EFDD000
+
 
 #pragma pack(push, 1)
 //段描述符

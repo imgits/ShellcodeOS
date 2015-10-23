@@ -74,6 +74,12 @@ struct disk_info
 	//uint16 params_offset;
 };
 
+struct  regs16_t
+{
+	unsigned short di, si, bp, sp, bx, dx, cx, ax;
+	unsigned short gs, fs, es, ds, eflags;
+};
+
 #pragma pack(pop)
 
 #define MEMTYPE_RAM       1
@@ -82,12 +88,11 @@ struct disk_info
 #define MEMTYPE_NVS       4
 
 extern "C" void bios_print_string(char *str);
-extern "C" int bios_get_drive_params(int drive, int *cyls, int *heads, int *sects);
-extern "C" int bios_read_disk(int drive, int cyl, int head, int sect, int nsect, void *buffer);
-extern "C" int vesa_get_info(struct vesa_info *info);
-extern "C" int vesa_get_mode_info(int mode, struct vesa_mode_info *info);
-extern "C" int vesa_set_mode(int mode);
-
+extern "C" int  bios_get_drive_params(int drive, int *cyls, int *heads, int *sects);
+extern "C" int  bios_read_disk(int drive, int cyl, int head, int sect, int nsect, void *buffer);
+extern "C" int  vesa_get_info(struct vesa_info *info);
+extern "C" int  vesa_get_mode_info(int mode, struct vesa_mode_info *info);
+extern "C" int  vesa_set_mode(int mode);
 
 uint32 load_os_loader(byte driver)
 {
@@ -126,14 +131,8 @@ uint32 load_os_loader(byte driver)
 	return file.size;
 }
 
-struct  regs16_t
-{
-	unsigned short di, si, bp, sp, bx, dx, cx, ax;
-	unsigned short gs, fs, es, ds, eflags;
-};
 
 extern "C" int callbios(unsigned char intnum, regs16_t *regs);
-
 
 void main(disk_info* disk, memory_info* mem_info)
 {
@@ -141,6 +140,12 @@ void main(disk_info* disk, memory_info* mem_info)
 	printf("disk driver=%d,type=%d, cylinders=%d, heads=%d, sectors=%d\n", 
 		disk->driver, disk->type, disk->cylinders, disk->heads, disk->sectors);
 	
+	regs16_t regs;
+	regs.ax = 0x0e41;
+	callbios(0x10, &regs);
+
+	__asm jmp $
+
 	//bios_print_string("Call BIOS OK\n");
 
 	int drive= disk->driver, cyls, heads, sects;

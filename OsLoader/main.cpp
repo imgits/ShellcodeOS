@@ -50,7 +50,7 @@ uint32 load_kernel(byte boot_driver)
 	printf("start_cluster=%X, file_size=%d image_size=%d\n", file.start_cluster, file.size, kernel_image_size);
 
 	//分配内核加载空间
-	char* os_kernel_buf = (char*)map_kernel_space(OS_KERNEL_BASE, kernel_image_size);
+	char* os_kernel_buf = (char*)alloc_memory(OS_KERNEL_BASE, kernel_image_size);
 
 	if (fat32.load_file(&file, os_kernel_buf, file.size) != file.size)
 	{
