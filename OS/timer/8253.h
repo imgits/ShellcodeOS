@@ -1,6 +1,7 @@
 //Programmable Interval Timer
 //http://wiki.osdev.org/PIT
 //"8042" PS/2 Controller:http://wiki.osdev.org/%228042%22_PS/2_Controller
+//Linux下的三种时钟:RTC/PIT/TSC的区别:http://blog.chinaunix.net/xmlrpc.php?r=blog/article&uid=149881&id=2780253
 
 #pragma once
 #include "8259.h"

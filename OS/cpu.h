@@ -115,9 +115,7 @@
 #define CPU_VENDOR_RISE      7
 #define CPU_VENDOR_TRANSMETA 8
 
-//
 // CPU family
-//
 
 #define CPU_FAMILY_386       3
 #define CPU_FAMILY_486       4
@@ -146,9 +144,13 @@ private:
 	int				m_mhz;
 	unsigned long	m_features;
 	unsigned long	m_cpuid_level;
-	char			m_vendorid[16];
-	char			m_modelid[64];
-	char			m_vendorname[16];
+	char				m_vendorid[16];
+	char				m_modelid[64];
+	char				m_vendorname[16];
+	//PROCESS
+	//GDT
+	//IDT
+	//TSS
 public:
 	CPU();
 	~CPU();

@@ -95,6 +95,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="system.cpp" />
     <ClCompile Include="timer\rtc.cpp" />
     <ClCompile Include="timer\8253.cpp" />
     <ClCompile Include="acpi.cpp" />
@@ -118,6 +119,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="system.h" />
     <ClInclude Include="timer\rtc.h" />
     <ClInclude Include="timer\8253.h" />
     <ClInclude Include="acpi.h" />
