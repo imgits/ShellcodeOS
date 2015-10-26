@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
- * FILE:              lib/rtl/i386/alldvrm.S
+ * FILE:              lib/rtl/i386/allrem.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  *
  * Copyright (C) 2002 Michael Ringgaard.
@@ -33,22 +33,42 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-#include <ntoskrnl.h>
+//#include <ntoskrnl.h>
 //#include <asm.inc>
 
-//PUBLIC __alldvrm
+//PUBLIC __allrem
  
 /* FUNCTIONS ***************************************************************/
 //.code
-_declspec(naked)_alldvrm(){ _asm{
-//__alldvrm:
+
+//
+// llrem - signed long remainder
+//
+// Purpose:
+//       Does a signed long remainder of the arguments.  Arguments are
+//       not changed.
+//
+// Entry:
+//       Arguments are passed on the stack:
+//               1st pushed: divisor (QWORD)
+//               2nd pushed: dividend (QWORD)
+//
+// Exit:
+//       EDX:EAX contains the remainder (dividend%divisor)
+//       NOTE: this routine removes the parameters from the stack.
+//
+// Uses:
+//       ECX
+//
+_declspec(naked)_allrem(){ _asm{
+//__allrem :
+
+        push    ebx
         push    edi
-        push    esi
-        push    ebp
 
 // Set up the local stack and save the index registers.  When this is done
-// the stack frame will look as follows (assuming that the expression a/b will
-// generate a call to alldvrm(a, b)):
+// the stack frame will look as follows (assuming that the expression a%b will
+// generate a call to lrem(a, b)):
 //
 //               -----------------
 //               |               |
@@ -63,11 +83,9 @@ _declspec(naked)_alldvrm(){ _asm{
 //               |---------------|
 //               | return addr** |
 //               |---------------|
-//               |      EDI      |
+//               |       EBX     |
 //               |---------------|
-//               |      ESI      |
-//               |---------------|
-//       ESP---->|      EBP      |
+//       ESP---->|       EDI     |
 //               -----------------
 //
 
@@ -75,23 +93,20 @@ _declspec(naked)_alldvrm(){ _asm{
 #undef DVNDHI
 #undef DVSRLO
 #undef DVSRHI
-#define DVNDLO  [esp + 16]       // stack address of dividend (a)
-#define DVNDHI  [esp + 20]       // stack address of dividend (a)
-#define DVSRLO  [esp + 24]      // stack address of divisor (b)
-#define DVSRHI  [esp + 28]      // stack address of divisor (b)
+#define DVNDLO  [esp + 12]       // stack address of dividend (a)
+#define DVNDHI  [esp + 16]       // stack address of dividend (a)
+#define DVSRLO  [esp + 20]      // stack address of divisor (b)
+#define DVSRHI  [esp + 24]      // stack address of divisor (b)
 
-// Determine sign of the quotient (edi = 0 if result is positive, non-zero
+// Determine sign of the result (edi = 0 if result is positive, non-zero
 // otherwise) and make operands positive.
-// Sign of the remainder is kept in ebp.
 
         xor     edi,edi         // result sign assumed positive
-        xor     ebp,ebp         // result sign assumed positive
 
         mov     eax,DVNDHI // hi word of a
         or      eax,eax         // test to see if signed
         jge     short _L1        // skip rest if a is already positive
-        inc     edi             // complement result sign flag
-        inc     ebp             // complement result sign flag
+        inc     edi             // complement result sign flag bit
         mov     edx,DVNDLO // lo word of a
         neg     eax             // make a positive
         neg     edx
@@ -102,8 +117,7 @@ _L1:
         mov     eax,DVSRHI // hi word of b
         or      eax,eax         // test to see if signed
         jge     short _L2        // skip rest if b is already positive
-        inc     edi             // complement the result sign flag
-        mov     edx,DVSRLO // lo word of a
+        mov     edx,DVSRLO // lo word of b
         neg     eax             // make b positive
         neg     edx
         sbb     eax,0
@@ -124,21 +138,14 @@ _L2:
         mov     ecx,DVSRLO // load divisor
         mov     eax,DVNDHI // load high word of dividend
         xor     edx,edx
-        div     ecx             // eax <- high order bits of quotient
-        mov     ebx,eax         // save high bits of quotient
+        div     ecx             // edx <- remainder
         mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
-        div     ecx             // eax <- low order bits of quotient
-        mov     esi,eax         // ebx:esi <- quotient
-//
-// Now we need to do a multiply so that we can compute the remainder.
-//
-        mov     eax,ebx         // set up high word of quotient
-        mul     dword ptr DVSRLO // HIWORD(QUOT) * DVSR
-        mov     ecx,eax         // save the result in ecx
-        mov     eax,esi         // set up low word of quotient
-        mul     dword ptr DVSRLO // LOWORD(QUOT) * DVSR
-        add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jmp     short _L4        // complete remainder calculation
+        div     ecx             // edx <- final remainder
+        mov     eax,edx         // edx:eax <- remainder
+        xor     edx,edx
+        dec     edi             // check result sign flag
+        jns     short _L4        // negate result, restore stack and return
+        jmp     short _L8        // result sign ok, restore stack and return
 
 //
 // Here we do it the hard way.  Remember, eax contains the high word of DVSR
@@ -157,7 +164,6 @@ _L5:
         or      ebx,ebx
         jnz     short _L5        // loop until divisor < 4194304K
         div     ecx             // now divide, ignore remainder
-        mov     esi,eax         // save quotient
 
 //
 // We may be off by one, so to check, we will multiply the quotient
@@ -166,17 +172,17 @@ _L5:
 // dividend is close to 2**64 and the quotient is off by 1.
 //
 
-        mul     dword ptr DVSRHI // QUOT * DVSRHI
-        mov     ecx,eax
-        mov     eax,DVSRLO
-        mul     esi             // QUOT * DVSRLO
+        mov     ecx,eax         // save a copy of quotient in ECX
+        mul     dword ptr DVSRHI
+        xchg    ecx,eax         // save product, get quotient in EAX
+        mul     dword ptr DVSRLO
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
         jc      short _L6        // carry means Quotient is off by 1
 
 //
 // do long compare here between original dividend and the result of the
 // multiply in edx:eax.  If original is larger or equal, we are ok, otherwise
-// subtract one (1) from the quotient.
+// subtract the original divisor from the result.
 //
 
         cmp     edx,DVNDHI // compare hi words of result and original
@@ -185,13 +191,10 @@ _L5:
         cmp     eax,DVNDLO // hi words are equal, compare lo words
         jbe     short _L7        // if less or equal we are ok, else subtract
 _L6:
-        dec     esi             // subtract 1 from quotient
         sub     eax,DVSRLO // subtract divisor from result
         sbb     edx,DVSRHI
 _L7:
-        xor     ebx,ebx         // ebx:esi <- quotient
 
-_L4:
 //
 // Calculate remainder by subtracting the result from the original dividend.
 // Since the result is already in a register, we will do the subtract in the
@@ -208,41 +211,21 @@ _L4:
 // the result to make it positive again.
 //
 
-        dec     ebp             // check result sign flag
-        jns     short _L9        // result is ok, set up the quotient
+        dec     edi             // check result sign flag
+        jns     short _L8        // result is ok, restore stack and return
+_L4:
         neg     edx             // otherwise, negate the result
         neg     eax
         sbb     edx,0
 
 //
-// Now we need to get the quotient into edx:eax and the remainder into ebx:ecx.
-//
-_L9:
-        mov     ecx,edx
-        mov     edx,ebx
-        mov     ebx,ecx
-        mov     ecx,eax
-        mov     eax,esi
-
-//
-// Just the cleanup left to do.  edx:eax contains the quotient.  Set the sign
-// according to the save value, cleanup the stack, and return.
-//
-
-        dec     edi             // check to see if result is negative
-        jnz     short _L8        // if EDI == 0, result should be negative
-        neg     edx             // otherwise, negate the result
-        neg     eax
-        sbb     edx,0
-
-//
+// Just the cleanup left to do.  edx:eax contains the quotient.
 // Restore the saved registers and return.
 //
 
 _L8:
-        pop     ebp
-        pop     esi
         pop     edi
+        pop     ebx
 
         ret     16
 

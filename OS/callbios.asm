@@ -63,9 +63,12 @@ endstruc
 ;+------------------------------------------------------+
 ;|    始终将代码复制到0x0000:7C00处执行                 |
 ;|    堆栈位于0x0000:7C00下方                           |
+;|    MBR系统启动时，GDT、IDT位于0x0000:7C00上方,此处   |
+;|有可能将其覆盖，因此必须重置：要么完全复制，要么设新值|
+;|要么将代码映射到其它段，如0x0000:7E00                 |
 ;+------------------------------------------------------+
 
-%define CODE_BASE						       0x7C00
+%define CODE_BASE						        0x7C00
 %define REBASE(addr)                           (CODE_BASE + (addr - reloc_base))
 
 %define CODE32                                 0x08
@@ -87,6 +90,7 @@ endstruc
 		rep  movsb                             ; do the actual copy (relocate code to low 16bit space)
 		push CODE_BASE                      ; jump to new code location
 		ret	
+align   16
 reloc_base:	
 protect32_mode_entry:
 [BITS 32]
@@ -95,8 +99,8 @@ protect32_mode_entry:
 		mov  eax, cr0
 		mov  [REBASE(pmode32_CR0)],eax     
 
-		sidt [REBASE(pmode32_idtr)]               ;#7 save 32bit idt pointer
-		sgdt [REBASE(pmode32_gdtr)]               ;#7 save 32bit gdt pointer
+		;sidt [REBASE(pmode32_idtr)]               ;#7 save 32bit idt pointer
+		;sgdt [REBASE(pmode32_gdtr)]               ;#7 save 32bit gdt pointer
 		
 		;设置GDT/IDT
         lgdt    [REBASE(GDTR)]
@@ -161,8 +165,8 @@ protect32_mode_entry:
 		pushad                                  ;#1 save general purpose registers to 16bit stack
 
 		;恢复保护模式GDT/IDT
-        a32 lgdt    [cs:REBASE(pmode32_gdtr)]
-        a32 lidt    [cs:REBASE(pmode32_idtr)]
+        ;a32 lgdt    [cs:REBASE(pmode32_gdtr)]
+        ;a32 lidt    [cs:REBASE(pmode32_idtr)]
 		;返回保护模式
 		mov  eax, cr0                          ;#3 get cr0 so we can modify it
 		or   eax, 1                            ;#3 set PE bit to turn on protected mode
@@ -189,7 +193,6 @@ protect32_mode_entry:
 		mov  ecx, regs16_t_size                ;#5 set copy size to our struct size
 		cld                                    ;#1 clear direction flag (so we copy forward)
 		rep  movsb                             ;#2 do the actual copy (16bit stack to 32bit stack)
-		;sti                                    ; enable interrupts
 		popad
 		ret                                    ;#1 return to caller
 	
@@ -207,7 +210,8 @@ protect32_mode_entry:
 	real_idtr:                                 ; IDT table pointer for 16bit access
 		dw 0x03FF                              ; table limit (size)
 		dd 0x00000000                          ; table base address
-		
+
+align   8		
 	GDT:                                ; GDT descriptor table
 		.null		dq 0x0000000000000000	   ; 0x00 - null segment descriptor
 		.code32		dq 0x00CF9A000000FFFF     ; 0x01 - 32bit code base 0x00000000 limit 4G
@@ -223,6 +227,6 @@ protect32_mode_entry:
 	    dw 0
 		dd 0 
 
-	callbios_end
-	_callbios_end
+	callbios_end:
+	_callbios_end:
 	

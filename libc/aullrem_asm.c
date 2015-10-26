@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
- * FILE:              lib/rtl/i386/aulldvrm.S
+ * FILE:              lib/rtl/i386/aullrem.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  *
  * Copyright (C) 2002 Michael Ringgaard.
@@ -33,21 +33,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-#include <ntoskrnl.h>
+//#include <ntoskrnl.h>
 //#include <asm.inc>
 
-//PUBLIC __aulldvrm
+//PUBLIC __aullrem
  
 /* FUNCTIONS ***************************************************************/
 //.code
-_declspec(naked)_aulldvrm(){ _asm{
-//__aulldvrm:
 
-// ulldvrm - unsigned long divide and remainder
+//
+// ullrem - unsigned long remainder
 //
 // Purpose:
-//       Does a unsigned long divide and remainder of the arguments.  Arguments
-//       are not changed.
+//       Does a unsigned long remainder of the arguments.  Arguments are
+//       not changed.
 //
 // Entry:
 //       Arguments are passed on the stack:
@@ -55,18 +54,20 @@ _declspec(naked)_aulldvrm(){ _asm{
 //               2nd pushed: dividend (QWORD)
 //
 // Exit:
-//       EDX:EAX contains the quotient (dividend/divisor)
-//       EBX:ECX contains the remainder (divided % divisor)
+//       EDX:EAX contains the remainder (dividend%divisor)
 //       NOTE: this routine removes the parameters from the stack.
 //
 // Uses:
 //       ECX
 //
-        push    esi
+_declspec(naked)_aullrem(){ _asm{
+//__aullrem:
+
+        push    ebx
 
 // Set up the local stack and save the index registers.  When this is done
-// the stack frame will look as follows (assuming that the expression a/b will
-// generate a call to aulldvrm(a, b)):
+// the stack frame will look as follows (assuming that the expression a%b will
+// generate a call to ullrem(a, b)):
 //
 //               -----------------
 //               |               |
@@ -81,7 +82,7 @@ _declspec(naked)_aulldvrm(){ _asm{
 //               |---------------|
 //               | return addr** |
 //               |---------------|
-//       ESP---->|      ESI      |
+//       ESP---->|      EBX      |
 //               -----------------
 //
 
@@ -90,11 +91,10 @@ _declspec(naked)_aulldvrm(){ _asm{
 #undef DVSRLO
 #undef DVSRHI
 #define DVNDLO  [esp + 8]       // stack address of dividend (a)
-#define DVNDHI  [esp + 12]       // stack address of dividend (a)
+#define DVNDHI  [esp + 12]      // stack address of dividend (a)
 #define DVSRLO  [esp + 16]      // stack address of divisor (b)
 #define DVSRHI  [esp + 20]      // stack address of divisor (b)
 
-//
 // Now do the divide.  First look to see if the divisor is less than 4194304K.
 // If so, then we can use a simple algorithm with word divides, otherwise
 // things get a little more complex.
@@ -106,22 +106,12 @@ _declspec(naked)_aulldvrm(){ _asm{
         mov     ecx,DVSRLO // load divisor
         mov     eax,DVNDHI // load high word of dividend
         xor     edx,edx
-        div     ecx             // get high order bits of quotient
-        mov     ebx,eax         // save high bits of quotient
+        div     ecx             // edx <- remainder, eax <- quotient
         mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
-        div     ecx             // get low order bits of quotient
-        mov     esi,eax         // ebx:esi <- quotient
-
-//
-// Now we need to do a multiply so that we can compute the remainder.
-//
-        mov     eax,ebx         // set up high word of quotient
-        mul     dword ptr DVSRLO // HIWORD(QUOT) * DVSR
-        mov     ecx,eax         // save the result in ecx
-        mov     eax,esi         // set up low word of quotient
-        mul     dword ptr DVSRLO // LOWORD(QUOT) * DVSR
-        add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jmp     short _L2        // complete remainder calculation
+        div     ecx             // edx <- final remainder
+        mov     eax,edx         // edx:eax <- remainder
+        xor     edx,edx
+        jmp     short _L2        // restore stack and return
 
 //
 // Here we do it the hard way.  Remember, eax contains DVSRHI
@@ -140,7 +130,6 @@ _L3:
         or      ecx,ecx
         jnz     short _L3        // loop until divisor < 4194304K
         div     ebx             // now divide, ignore remainder
-        mov     esi,eax         // save quotient
 
 //
 // We may be off by one, so to check, we will multiply the quotient
@@ -149,58 +138,49 @@ _L3:
 // dividend is close to 2**64 and the quotient is off by 1.
 //
 
-        mul     dword ptr DVSRHI // QUOT * DVSRHI
-        mov     ecx,eax
-        mov     eax,DVSRLO
-        mul     esi             // QUOT * DVSRLO
+        mov     ecx,eax         // save a copy of quotient in ECX
+        mul     dword ptr DVSRHI
+        xchg    ecx,eax         // put partial product in ECX, get quotient in EAX
+        mul     dword ptr DVSRLO
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
         jc      short _L4        // carry means Quotient is off by 1
 
 //
 // do long compare here between original dividend and the result of the
-// multiply in edx:eax.  If original is larger or equal, we are ok, otherwise
-// subtract one (1) from the quotient.
+// multiply in edx:eax.  If original is larger or equal, we're ok, otherwise
+// subtract the original divisor from the result.
 //
 
         cmp     edx,DVNDHI // compare hi words of result and original
         ja      short _L4        // if result > original, do subtract
-        jb      short _L5        // if result < original, we are ok
+        jb      short _L5        // if result < original, we're ok
         cmp     eax,DVNDLO // hi words are equal, compare lo words
-        jbe     short _L5        // if less or equal we are ok, else subtract
+        jbe     short _L5        // if less or equal we're ok, else subtract
 _L4:
-        dec     esi             // subtract 1 from quotient
         sub     eax,DVSRLO // subtract divisor from result
         sbb     edx,DVSRHI
 _L5:
-        xor     ebx,ebx         // ebx:esi <- quotient
 
-_L2:
 //
 // Calculate remainder by subtracting the result from the original dividend.
-// Since the result is already in a register, we will do the subtract in the
-// opposite direction and negate the result.
+// Since the result is already in a register, we will perform the subtract in
+// the opposite direction and negate the result to make it positive.
 //
 
-        sub     eax,DVNDLO // subtract dividend from result
+        sub     eax,DVNDLO // subtract original dividend from result
         sbb     edx,DVNDHI
-        neg     edx             // otherwise, negate the result
+        neg     edx             // and negate it
         neg     eax
         sbb     edx,0
 
 //
-// Now we need to get the quotient into edx:eax and the remainder into ebx:ecx.
-//
-        mov     ecx,edx
-        mov     edx,ebx
-        mov     ebx,ecx
-        mov     ecx,eax
-        mov     eax,esi
-//
-// Just the cleanup left to do.  edx:eax contains the quotient.
+// Just the cleanup left to do.  dx:ax contains the remainder.
 // Restore the saved registers and return.
 //
 
-        pop     esi
+_L2:
+
+        pop     ebx
 
         ret     16
 

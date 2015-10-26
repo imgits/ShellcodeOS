@@ -80,8 +80,15 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="alldiv_asm.c" />
     <ClCompile Include="alldvrm_asm.c" />
+    <ClCompile Include="allmul_asm.c" />
+    <ClCompile Include="allrem_asm.c" />
+    <ClCompile Include="allshl_asm.c" />
+    <ClCompile Include="allshr_asm.c" />
     <ClCompile Include="aulldvrm_asm.c" />
+    <ClCompile Include="aullrem_asm.c" />
+    <ClCompile Include="aullshr_asm.c" />
     <ClCompile Include="c++.cpp" />
     <ClCompile Include="fat32.cpp" />
     <ClCompile Include="isxdigit.c" />

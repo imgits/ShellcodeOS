@@ -18,6 +18,7 @@
 #include "8259.h"
 #include "keyboard.h"
 #include "rtc.h"
+#include "bios.h"
 
 //PAGE_FRAME_DB  page_frame_db;
 CPU			  cpu;
@@ -25,39 +26,39 @@ GDT			  gdt;
 IDT			  idt;
 TSS           tss;
 MMU			  mmu;
-TRAP		      trap;
-
-#include "../OsLoader/bios.h"
+TRAP	      trap;
 
 void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 {
-	//init_vga((void*)PMODE_VIDEO_BASE);
-	init_vga((void*)0xb8000);
 	puts("\nHello world\n", 30);
 	puts("Shellcode OS is starting...\n", 30);
-	
+
+	CppInit();
+
 	BIOS bios;
 	memory_info meminfo;
 	bios.get_mem_info(meminfo);
+
 	uint64 memsize = 0;
 	for (int i = 0; i < meminfo.map_count; i++)
 	{
 		uint64 length = meminfo.mem_maps[i].length;
 		uint64 begin = meminfo.mem_maps[i].base_addr;
 		uint64 end = begin + length;
-		//printf("%d %08X-%08X %08X-%08X %08X-%08X %d ",
+		printf("%d %08X-%08X %08X-%08X %08X-%08X %d ",
+			i,
+			(uint32)(begin >> 32), (uint32)(begin & 0xffffffff),
+			(uint32)(end   >> 32), (uint32)(end   & 0xffffffff),
+			(uint32)(length>> 32), (uint32)(length & 0xffffffff),
+			meminfo.mem_maps[i].type);
+
+		//printf("%d %016llX %016llX %016llX %d ",
 		//	i,
-		//	begin >> 32, begin & 0xffffffff,
-		//	end   >> 32, end   & 0xffffffff,
-		//	length>> 32, length & 0xffffffff,
+		//	begin,
+		//	end,
+		//	length,
 		//	meminfo.mem_maps[i].type);
 
-		printf("%d %016llX %016llX %016llX %d ",
-			i,
-			begin,
-			end,
-			length,
-			meminfo.mem_maps[i].type);
 		switch (meminfo.mem_maps[i].type)
 		{
 		case MEMTYPE_RAM:
@@ -74,9 +75,6 @@ void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 		}
 	}
 
-	bios.puts("******************call BIOS in OS******************\n");
-
-	CppInit();
 	PAGE_FRAME_DB::Init(next_free_page_frame, 0xfffff);
 	
 	mmu.Init();

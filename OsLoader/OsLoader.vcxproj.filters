@@ -26,13 +26,5 @@
     <ClInclude Include="kernel_file.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="bios.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="callbios.asm">
-      <Filter>源文件</Filter>
-    </CustomBuild>
   </ItemGroup>
 </Project>

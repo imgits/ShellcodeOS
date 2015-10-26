@@ -135,68 +135,68 @@ uint32 load_os_loader(byte driver)
 
 extern "C" int callbios(unsigned char intnum, regs_t *regs);
 
-void main(disk_info* disk, memory_info* mem_info)
+void main(byte boot_drive)
 {
 	printf("\nBootLoader is starting...\n");
-	printf("disk driver=%d,type=%d, cylinders=%d, heads=%d, sectors=%d\n", 
-		disk->driver, disk->type, disk->cylinders, disk->heads, disk->sectors);
+	//printf("disk driver=%d,type=%d, cylinders=%d, heads=%d, sectors=%d\n", 
+	//	disk->driver, disk->type, disk->cylinders, disk->heads, disk->sectors);
 	
-	regs_t regs;
-	regs.eax = 0x0e41;
-	callbios(0x10, &regs);
+	//regs_t regs;
+	//regs.eax = 0x0e41;
+	//callbios(0x10, &regs);
 
 	//bios_print_string("Call BIOS OK\n");
 
-	int drive= disk->driver, cyls, heads, sects;
-	
-	bios_get_drive_params(drive, &cyls, &heads, &sects);
-	printf("BIOS driver=%d,cylinders=%d, heads=%d, sectors=%d\n",
-		drive, cyls, heads, sects);
+	//int drive= disk->driver, cyls, heads, sects;
+	//
+	//bios_get_drive_params(drive, &cyls, &heads, &sects);
+	//printf("BIOS driver=%d,cylinders=%d, heads=%d, sectors=%d\n",
+	//	drive, cyls, heads, sects);
 
 
 	//disk_params* params = (disk_params*)((((uint32)disk->params_seg)<<4) + disk->params_offset);
 	//printf("disk_param=%X seg=%X offset=%X size = %d\n", params, disk->params_seg, disk->params_offset, params->size);
 
-	uint64 memsize = 0;
-	uint32 mem_map_count = mem_info->map_count;
-	memory_map* mem_maps= mem_info->mem_maps;
-	printf("memory map=%08X count=%08X:\n", mem_maps, mem_map_count);
-	for (int i = 0; i < mem_map_count; i++)
-	{
-		printf("%d %08X %08X %08X %d ", 
-			i, 
-			(uint32)mem_maps->BaseAddr,
-			(uint32)(mem_maps->BaseAddr + mem_maps->Length),
-			(uint32)mem_maps->Length,
-			mem_maps->Type);
-		switch (mem_maps->Type)
-		{
-		case MEMTYPE_RAM: 
-			printf("RAM\n"); 
-			if (memsize < (uint64)(mem_maps->BaseAddr + mem_maps->Length))
-			{
-				memsize = (uint64)(mem_maps->BaseAddr + mem_maps->Length);
-			}
-			break;
-		case MEMTYPE_RESERVED: printf("RESERVED\n"); break;
-		case MEMTYPE_ACPI: printf("ACPI\n"); break;
-		case MEMTYPE_NVS: printf("NVS\n"); break;
-		default:	printf("\n"); break;
-		}
-		mem_maps++;
-	}
-	printf("memsize=%llX\n", memsize);
+	//uint64 memsize = 0;
+	//uint32 mem_map_count = mem_info->map_count;
+	//memory_map* mem_maps= mem_info->mem_maps;
+	//printf("memory map=%08X count=%08X:\n", mem_maps, mem_map_count);
+	//for (int i = 0; i < mem_map_count; i++)
+	//{
+	//	printf("%d %08X %08X %08X %d ", 
+	//		i, 
+	//		(uint32)mem_maps->BaseAddr,
+	//		(uint32)(mem_maps->BaseAddr + mem_maps->Length),
+	//		(uint32)mem_maps->Length,
+	//		mem_maps->Type);
+	//	switch (mem_maps->Type)
+	//	{
+	//	case MEMTYPE_RAM: 
+	//		printf("RAM\n"); 
+	//		if (memsize < (uint64)(mem_maps->BaseAddr + mem_maps->Length))
+	//		{
+	//			memsize = (uint64)(mem_maps->BaseAddr + mem_maps->Length);
+	//		}
+	//		break;
+	//	case MEMTYPE_RESERVED: printf("RESERVED\n"); break;
+	//	case MEMTYPE_ACPI: printf("ACPI\n"); break;
+	//	case MEMTYPE_NVS: printf("NVS\n"); break;
+	//	default:	printf("\n"); break;
+	//	}
+	//	mem_maps++;
+	//}
+	//printf("memsize=%llX\n", memsize);
 	
-	uint32 filesize = load_os_loader(disk->driver);
+	uint32 filesize = load_os_loader(boot_drive);
 
-	typedef void (*osloader_main)(byte boot_driver, uint64 mem_size);
+	typedef void (*osloader_main)(byte boot_drive);
 
 	PE pe((void*)KERNEL_LOADER_BASE);
 	osloader_main osldr_main = (osloader_main)pe.EntryPoint();
 	uint32 image_size = pe.ImageSize();
 	printf("OsLoader filesize = %d imagesize=%d\n", filesize, image_size);
 
-	osldr_main(disk->driver, memsize);
+	osldr_main(boot_drive);
 
 	__asm jmp $
 }

@@ -60,6 +60,9 @@ public:
 		}
 	}
 
+	//Detecting Memory (x86):http://wiki.osdev.org/Detecting_Memory_(x86)
+	//Memory Map (x86):http://wiki.osdev.org/Memory_Map_(x86)
+	//http://files.osdev.org/mirrors/geezer/osd/ram/index.htm#layout
 	bool get_mem_info(memory_info& meminfo)
 	{
 		regs_t regs;

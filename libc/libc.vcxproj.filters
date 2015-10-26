@@ -45,6 +45,27 @@
     <ClCompile Include="liballoc.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="alldiv_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="allmul_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="allrem_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="allshl_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="allshr_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="aullrem_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="aullshr_asm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vsprintf.h">

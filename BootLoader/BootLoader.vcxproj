@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,7 +19,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -101,7 +101,7 @@
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nasm ./boot.asm -o ../bin/boot.bin</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\nasm\nasm.exe ./boot.asm -o ../bin/boot.bin</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../Release/boot.bin</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../bin/boot.bin</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">./Debug/boot.bin</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
@@ -111,18 +111,6 @@
     <ProjectReference Include="..\libc\libc.vcxproj">
       <Project>{7a295e47-d6fe-4e63-9f31-32b8e7c5246c}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="callbios.asm">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\nasm\nasm.exe -f win32 ./callbios.asm -o ./release/callbios.obj</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./release/callbios.obj</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="bioscall.asm">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\nasm\nasm.exe -f win32 ./bioscall.asm -o ../release/bioscall.obj</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../release/bioscall.obj</Outputs>
-    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
