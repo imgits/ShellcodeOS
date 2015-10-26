@@ -18,19 +18,21 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="mmu.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="acpi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmu.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="acpi.h">
+    <ClInclude Include="kernel_file.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="bios.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="callbios.asm">
+      <Filter>源文件</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

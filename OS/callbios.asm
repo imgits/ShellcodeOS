@@ -43,7 +43,7 @@
 
 [bits 32]
 
-global callbios, _callbios
+global callbios, _callbios, callbios_end,_callbios_end
 
 struc regs16_t
 	.edi	resd 1
@@ -54,48 +54,59 @@ struc regs16_t
 	.edx	resd 1
 	.ecx	resd 1
 	.eax	resd 1
-	.gs	resw 1
-	.fs	resw 1
-	.es	resw 1
-	.ds	resw 1
+	.gs		resw 1
+	.fs		resw 1
+	.es		resw 1
+	.ds		resw 1
 	.eflags resd 1
 endstruc
+;+------------------------------------------------------+
+;|    始终将代码复制到0x0000:7C00处执行                 |
+;|    堆栈位于0x0000:7C00下方                           |
+;+------------------------------------------------------+
 
-%define MODULE_SEG                             0x1000
-%define MODULE_BASE                            0x10000
-%define REBASE(addr)                           (addr - MODULE_BASE)
+%define CODE_BASE						       0x7C00
+%define REBASE(addr)                           (CODE_BASE + (addr - reloc_base))
 
 %define CODE32                                 0x08
 %define DATA32                                 0x10
 %define CODE16                                 0x18
 %define DATA16                                 0x20
-%define STACK16                                (0xfff0 - regs16_t_size)
-
-
+%define STACK16                                (CODE_BASE - regs16_t_size)
 
         SECTION .text
 
 	callbios:                               
 	_callbios:
-
-	protect32_mode_entry:
+		cli                                    ; disable interrupts
+		pushad                                  ; save register state to 32bit stack
+		mov  esi, reloc_base                   ; set source to code below
+		mov  edi, CODE_BASE                ; set destination to new base address
+		mov  ecx, (callbios_end - reloc_base)  ; set copy size to our codes size
+		cld                                    ; clear direction flag (so we copy forward)
+		rep  movsb                             ; do the actual copy (relocate code to low 16bit space)
+		push CODE_BASE                      ; jump to new code location
+		ret	
+reloc_base:	
+protect32_mode_entry:
 [BITS 32]
-		cli
-		pushad
-		mov  [pmode32_esp], esp        ;#6 save 32bit stack pointer
+		mov  [REBASE(pmode32_esp)], esp        ;#6 save 32bit stack pointer
 
-		sidt [pmode32_idtr]               ;#7 save 32bit idt pointer
-		sgdt [pmode32_gdtr]               ;#7 save 32bit gdt pointer
+		mov  eax, cr0
+		mov  [REBASE(pmode32_CR0)],eax     
+
+		sidt [REBASE(pmode32_idtr)]               ;#7 save 32bit idt pointer
+		sgdt [REBASE(pmode32_gdtr)]               ;#7 save 32bit gdt pointer
 		
 		;设置GDT/IDT
-        lgdt    [GDTR]
-        lidt    [IDTR]
+        lgdt    [REBASE(GDTR)]
+        lidt    [REBASE(IDTR)]
 
 		;用中断号修正INT xx指令
 		cld
 		lea  esi, [esp + 0x24]                   ;#4 set position of intnum on 32bit stack
 		lodsd     
-		mov  [intr + 1], al                  ;#5 set intrrupt immediate byte from our arguments 
+		mov  [REBASE(intr) + 1], al                  ;#5 set intrrupt immediate byte from our arguments 
 		
 		;复制寄存器参数regs16_t到实模式栈中
 		mov  esi, [esi]                        ;#2 read regs pointer in esi as source
@@ -109,11 +120,12 @@ endstruc
 	protect16_mode: 
 [BITS 16]
 		;退出保护模式
-		mov  eax, cr0                          ;#3 get cr0 so we can modify it
-		and  eax, ~1						   ;#? mask off PE bit to turn off protected mode
-		mov  cr0, eax                          ;#3 set cr0 to result
+		mov  eax, cr0                           ;#3 get cr0 so we can modify it
+		and  eax, ~0x80000000					;去掉内存分页标志
+		and  eax, ~1								;去掉保护模式标志
+		mov  cr0, eax                           ;#3 set cr0 to result
 		;进入实地址模式
-		jmp  dword MODULE_SEG:REBASE(real_mode)      ;#? finally set cs:ip to enter real-mode
+		jmp  dword 0x0000:REBASE(real_mode)      ;#? finally set cs:ip to enter real-mode
 
 	real_mode: 
 [BITS 16]
@@ -153,7 +165,8 @@ endstruc
         a32 lidt    [cs:REBASE(pmode32_idtr)]
 		;返回保护模式
 		mov  eax, cr0                          ;#3 get cr0 so we can modify it
-		or   eax, 1                              ;#3 set PE bit to turn on protected mode
+		or   eax, 1                            ;#3 set PE bit to turn on protected mode
+		a32  mov  eax, [cs:REBASE(pmode32_CR0)]
 		mov  cr0, eax                          ;#3 set cr0 to result
 		jmp  dword CODE32:protect32_mode_leave     ;#6 switch to 32bit selector (32bit protected mode)
 
@@ -169,7 +182,7 @@ endstruc
 
 		mov  esi, esp						   ;#2 set copy source to 16bit stack
 		and  esi, 0x0000ffff 
-		mov  esp, [pmode32_esp]				   ;#6 restore 32bit stack pointer
+		mov  esp, [REBASE(pmode32_esp)]				   ;#6 restore 32bit stack pointer
 
 		lea  edi, [esp+0x28]                   ;#4 set position of regs pointer on 32bit stack
 		mov  edi, [edi]                        ;#2 use regs pointer in edi as copy destination
@@ -181,8 +194,9 @@ endstruc
 		ret                                    ;#1 return to caller
 	
 	pmode32_esp	dd	0x00000000
+	pmode32_CR0 dd  0x00000000
 
-	pmode32_idtr:                                 ; IDT table pointer for 32bit access
+	pmode32_idtr:                              ; IDT table pointer for 32bit access
 		dw 0x0000                              ; table limit (size)
 		dd 0x00000000                          ; table base address
 		
@@ -198,8 +212,8 @@ endstruc
 		.null		dq 0x0000000000000000	   ; 0x00 - null segment descriptor
 		.code32		dq 0x00CF9A000000FFFF     ; 0x01 - 32bit code base 0x00000000 limit 4G
 		.data32		dq 0x00CF92000000FFFF     ; 0x02 - 32bit data base 0x00000000 limit 4G
-		.code16		dq 0x00009A010000FFFF     ; 0x03 - 16bit code base 0x00010000 limit 64K
-		.data16		dq 0x000092010000FFFF     ; 0x04 - 16bit data base 0x00010000 limit 64K
+		.code16		dq 0x00009A000000FFFF     ; 0x03 - 16bit code base 0x00010000 limit 64K
+		.data16		dq 0x000092000000FFFF     ; 0x04 - 16bit data base 0x00010000 limit 64K
 
 	GDTR:                                 ; GDT table pointer for 16bit access
 		dw $ - GDT - 1				  ; table limit (size)
@@ -208,8 +222,7 @@ endstruc
     IDTR:
 	    dw 0
 		dd 0 
-		
-	callbios_end:                                 ; end marker (so we can copy the code)
-	
 
+	callbios_end
+	_callbios_end
 	

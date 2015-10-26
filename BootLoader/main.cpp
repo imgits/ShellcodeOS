@@ -74,10 +74,11 @@ struct disk_info
 	//uint16 params_offset;
 };
 
-struct  regs16_t
+struct  regs_t
 {
-	unsigned short di, si, bp, sp, bx, dx, cx, ax;
-	unsigned short gs, fs, es, ds, eflags;
+	unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	unsigned short gs, fs, es, ds;
+	unsigned int eflags;
 };
 
 #pragma pack(pop)
@@ -132,7 +133,7 @@ uint32 load_os_loader(byte driver)
 }
 
 
-extern "C" int callbios(unsigned char intnum, regs16_t *regs);
+extern "C" int callbios(unsigned char intnum, regs_t *regs);
 
 void main(disk_info* disk, memory_info* mem_info)
 {
@@ -140,11 +141,9 @@ void main(disk_info* disk, memory_info* mem_info)
 	printf("disk driver=%d,type=%d, cylinders=%d, heads=%d, sectors=%d\n", 
 		disk->driver, disk->type, disk->cylinders, disk->heads, disk->sectors);
 	
-	regs16_t regs;
-	regs.ax = 0x0e41;
+	regs_t regs;
+	regs.eax = 0x0e41;
 	callbios(0x10, &regs);
-
-	__asm jmp $
 
 	//bios_print_string("Call BIOS OK\n");
 
@@ -188,12 +187,15 @@ void main(disk_info* disk, memory_info* mem_info)
 	}
 	printf("memsize=%llX\n", memsize);
 	
-	load_os_loader(disk->driver);
+	uint32 filesize = load_os_loader(disk->driver);
 
 	typedef void (*osloader_main)(byte boot_driver, uint64 mem_size);
 
 	PE pe((void*)KERNEL_LOADER_BASE);
 	osloader_main osldr_main = (osloader_main)pe.EntryPoint();
+	uint32 image_size = pe.ImageSize();
+	printf("OsLoader filesize = %d imagesize=%d\n", filesize, image_size);
+
 	osldr_main(disk->driver, memsize);
 
 	__asm jmp $

@@ -43,7 +43,7 @@
 
 [bits 32]
 
-global callbios, _callbios
+global callbios, _callbios, callbios_end,_callbios_end
 
 struc regs16_t
 	.edi	resd 1
@@ -54,15 +54,19 @@ struc regs16_t
 	.edx	resd 1
 	.ecx	resd 1
 	.eax	resd 1
-	.gs	resw 1
-	.fs	resw 1
-	.es	resw 1
-	.ds	resw 1
+	.gs		resw 1
+	.fs		resw 1
+	.es		resw 1
+	.ds		resw 1
 	.eflags resd 1
 endstruc
+;+-------------------------千万注意---------------------+
+;|    当模块加载地址改变时，必须同时修改                |
+;|    MODULE_SEG、MODULE_BASE GDT.code16 GDT.data16     |
+;+------------------------------------------------------+
 
-%define MODULE_SEG                             0x1000
-%define MODULE_BASE                            0x10000
+%define MODULE_SEG                             0x2000
+%define MODULE_BASE                            0x20000
 %define REBASE(addr)                           (addr - MODULE_BASE)
 
 %define CODE32                                 0x08
@@ -70,8 +74,6 @@ endstruc
 %define CODE16                                 0x18
 %define DATA16                                 0x20
 %define STACK16                                (0xfff0 - regs16_t_size)
-
-
 
         SECTION .text
 
@@ -83,6 +85,9 @@ endstruc
 		cli
 		pushad
 		mov  [pmode32_esp], esp        ;#6 save 32bit stack pointer
+
+		mov  eax, cr0
+		mov  [pmode32_CR0],eax     
 
 		sidt [pmode32_idtr]               ;#7 save 32bit idt pointer
 		sgdt [pmode32_gdtr]               ;#7 save 32bit gdt pointer
@@ -109,9 +114,10 @@ endstruc
 	protect16_mode: 
 [BITS 16]
 		;退出保护模式
-		mov  eax, cr0                          ;#3 get cr0 so we can modify it
-		and  eax, ~1						   ;#? mask off PE bit to turn off protected mode
-		mov  cr0, eax                          ;#3 set cr0 to result
+		mov  eax, cr0                           ;#3 get cr0 so we can modify it
+		and  eax, ~0x80000000					;去掉内存分页标志
+		and  eax, ~1								;去掉保护模式标志
+		mov  cr0, eax                           ;#3 set cr0 to result
 		;进入实地址模式
 		jmp  dword MODULE_SEG:REBASE(real_mode)      ;#? finally set cs:ip to enter real-mode
 
@@ -153,7 +159,8 @@ endstruc
         a32 lidt    [cs:REBASE(pmode32_idtr)]
 		;返回保护模式
 		mov  eax, cr0                          ;#3 get cr0 so we can modify it
-		or   eax, 1                              ;#3 set PE bit to turn on protected mode
+		or   eax, 1                            ;#3 set PE bit to turn on protected mode
+		a32  mov  eax, [cs:REBASE(pmode32_CR0)]
 		mov  cr0, eax                          ;#3 set cr0 to result
 		jmp  dword CODE32:protect32_mode_leave     ;#6 switch to 32bit selector (32bit protected mode)
 
@@ -181,8 +188,9 @@ endstruc
 		ret                                    ;#1 return to caller
 	
 	pmode32_esp	dd	0x00000000
+	pmode32_CR0 dd  0x00000000
 
-	pmode32_idtr:                                 ; IDT table pointer for 32bit access
+	pmode32_idtr:                              ; IDT table pointer for 32bit access
 		dw 0x0000                              ; table limit (size)
 		dd 0x00000000                          ; table base address
 		
@@ -198,8 +206,8 @@ endstruc
 		.null		dq 0x0000000000000000	   ; 0x00 - null segment descriptor
 		.code32		dq 0x00CF9A000000FFFF     ; 0x01 - 32bit code base 0x00000000 limit 4G
 		.data32		dq 0x00CF92000000FFFF     ; 0x02 - 32bit data base 0x00000000 limit 4G
-		.code16		dq 0x00009A010000FFFF     ; 0x03 - 16bit code base 0x00010000 limit 64K
-		.data16		dq 0x000092010000FFFF     ; 0x04 - 16bit data base 0x00010000 limit 64K
+		.code16		dq 0x00009A020000FFFF     ; 0x03 - 16bit code base 0x00010000 limit 64K
+		.data16		dq 0x000092020000FFFF     ; 0x04 - 16bit data base 0x00010000 limit 64K
 
 	GDTR:                                 ; GDT table pointer for 16bit access
 		dw $ - GDT - 1				  ; table limit (size)
@@ -208,8 +216,8 @@ endstruc
     IDTR:
 	    dw 0
 		dd 0 
-		
-	callbios_end:                                 ; end marker (so we can copy the code)
-	
+
+	callbios_end
+	_callbios_end
 
 	

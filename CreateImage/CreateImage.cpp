@@ -75,6 +75,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		vhd.Close();
 	}
 
+
 	MBR  boot_mbr;
 	MBR  vhd_mbr;
 	int len;

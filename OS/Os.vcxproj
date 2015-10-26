@@ -119,6 +119,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="callbios.asm">
+      <FileType>CppHeader</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\nasm\nasm.exe -f win32 ./callbios.asm -o ./Release/callbios.obj</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./Release/callbios.obj</Outputs>
+    </CustomBuild>
     <ClInclude Include="system.h" />
     <ClInclude Include="timer\rtc.h" />
     <ClInclude Include="timer\8253.h" />

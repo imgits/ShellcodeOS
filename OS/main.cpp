@@ -25,16 +25,59 @@ GDT			  gdt;
 IDT			  idt;
 TSS           tss;
 MMU			  mmu;
-TRAP		  trap;
+TRAP		      trap;
 
-void main(uint32 kernel_size, uint32 page_frame_min, uint32 page_frame_max)
+#include "../OsLoader/bios.h"
+
+void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 {
-	init_vga((void*)PMODE_VIDEO_BASE);
+	//init_vga((void*)PMODE_VIDEO_BASE);
+	init_vga((void*)0xb8000);
 	puts("\nHello world\n", 30);
 	puts("Shellcode OS is starting...\n", 30);
+	
+	BIOS bios;
+	memory_info meminfo;
+	bios.get_mem_info(meminfo);
+	uint64 memsize = 0;
+	for (int i = 0; i < meminfo.map_count; i++)
+	{
+		uint64 length = meminfo.mem_maps[i].length;
+		uint64 begin = meminfo.mem_maps[i].base_addr;
+		uint64 end = begin + length;
+		//printf("%d %08X-%08X %08X-%08X %08X-%08X %d ",
+		//	i,
+		//	begin >> 32, begin & 0xffffffff,
+		//	end   >> 32, end   & 0xffffffff,
+		//	length>> 32, length & 0xffffffff,
+		//	meminfo.mem_maps[i].type);
+
+		printf("%d %016llX %016llX %016llX %d ",
+			i,
+			begin,
+			end,
+			length,
+			meminfo.mem_maps[i].type);
+		switch (meminfo.mem_maps[i].type)
+		{
+		case MEMTYPE_RAM:
+			printf("RAM\n");
+			if (memsize < end)
+			{
+				memsize = end;
+			}
+			break;
+		case MEMTYPE_RESERVED: printf("RESERVED\n"); break;
+		case MEMTYPE_ACPI: printf("ACPI\n"); break;
+		case MEMTYPE_NVS: printf("NVS\n"); break;
+		default:	printf("\n"); break;
+		}
+	}
+
+	bios.puts("******************call BIOS in OS******************\n");
 
 	CppInit();
-	PAGE_FRAME_DB::Init(page_frame_min, page_frame_max);
+	PAGE_FRAME_DB::Init(next_free_page_frame, 0xfffff);
 	
 	mmu.Init();
 

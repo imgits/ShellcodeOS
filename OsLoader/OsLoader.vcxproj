@@ -86,9 +86,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="acpi.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="mmu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libc\libc.vcxproj">
@@ -96,8 +94,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="acpi.h" />
+    <ClInclude Include="bios.h" />
+    <ClInclude Include="kernel_file.h" />
     <ClInclude Include="mmu.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="callbios.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\nasm\nasm.exe -f win32 ./callbios.asm -o ./Release/callbios.obj</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./Release/callbios.obj</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
