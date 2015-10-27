@@ -20,13 +20,13 @@
 #include "rtc.h"
 #include "bios.h"
 
-//PAGE_FRAME_DB  page_frame_db;
+PAGE_FRAME_DB  page_frame_db;
 CPU			  cpu;
 GDT			  gdt;
 IDT			  idt;
 TSS           tss;
 MMU			  mmu;
-TRAP	      trap;
+TRAP			  trap;
 
 void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 {
@@ -52,13 +52,6 @@ void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 			(uint32)(length>> 32), (uint32)(length & 0xffffffff),
 			meminfo.mem_maps[i].type);
 
-		//printf("%d %016llX %016llX %016llX %d ",
-		//	i,
-		//	begin,
-		//	end,
-		//	length,
-		//	meminfo.mem_maps[i].type);
-
 		switch (meminfo.mem_maps[i].type)
 		{
 		case MEMTYPE_RAM:
@@ -75,9 +68,9 @@ void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 		}
 	}
 
-	PAGE_FRAME_DB::Init(next_free_page_frame, 0xfffff);
+	//PAGE_FRAME_DB::Init(next_free_page_frame, 0xfffff);
 	
-	mmu.Init();
+	//mmu.Init();
 
 	//ACPI acpi;
 	//acpi.Init(&mmu);
@@ -92,7 +85,7 @@ void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 	PIC::Init(&idt);
 	PIT::Init();
 	RTC::Init();
-	Keyboard::Init();
+	//Keyboard::Init();
 	_enable();
 	__asm jmp $
 }

@@ -1,23 +1,10 @@
-#include "mmu.h"
+#include "paging.h"
+#include "page_frame.h"
 #include <string.h>
 
-MMU::MMU()
+uint32 PAGER::map_pages(uint32 physical_addr, uint32 virtual_addr, int size, int protect)
 {
-}
-
-
-MMU::~MMU()
-{
-}
-
-void MMU::Init()
-{
-}
-
-uint32 MMU::map_memory(uint32 virtual_addr, uint32 physical_addr, uint32 size)
-{
-	uint32* page_dir = (uint32*)PAGE_DIR;
-	uint32 protect = PT_PRESENT | PT_WRITABLE;
+	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
 
 	uint32 virtual_address = virtual_addr & 0xfffff000;
 	uint32 physical_address = physical_addr & 0xfffff000;
@@ -40,10 +27,9 @@ uint32 MMU::map_memory(uint32 virtual_addr, uint32 physical_addr, uint32 size)
 	return virtual_address;
 }
 
-void MMU::unmap_memory(uint32 virtual_addr, uint32 size)
+void PAGER::unmap_pages(uint32 virtual_addr, int size)
 {
-	uint32* page_dir = (uint32*)PAGE_DIR;
-	uint32 protect = PT_PRESENT | PT_WRITABLE;
+	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
 
 	uint32 virtual_address = virtual_addr & 0xfffff000;
 	uint32 pages = ((virtual_addr - virtual_address) + size + PAGE_SIZE - 1) >> 12;
@@ -56,8 +42,9 @@ void MMU::unmap_memory(uint32 virtual_addr, uint32 size)
 		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
 		if (page_dir[pd_index] != 0)
 		{
+			uint32 page = page_table_VA[pt_index] >> 12;
 			page_table_VA[pt_index] = 0;
+			PAGE_FRAME_DB::free_physical_page(page);
 		}
 	}
 }
-

@@ -90,6 +90,7 @@
     <ClCompile Include="aullrem_asm.c" />
     <ClCompile Include="aullshr_asm.c" />
     <ClCompile Include="c++.cpp" />
+    <ClCompile Include="disk.cpp" />
     <ClCompile Include="fat32.cpp" />
     <ClCompile Include="isxdigit.c" />
     <ClCompile Include="liballoc.c" />
@@ -100,6 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c++.h" />
+    <ClInclude Include="disk.h" />
     <ClInclude Include="Fat32.h" />
     <ClInclude Include="intrin.h" />
     <ClInclude Include="liballoc.h" />

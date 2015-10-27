@@ -7,6 +7,7 @@
 
 #define   KERNEL_BASE						0x80000000
 #define   PAGE_TABLE_BASE					0xC0000000
+#define   PAGE_DIR_BASE					0xC0300000
 #define   PAGE_FRAME_BASE					0xC0400000
 #define   PAGE_LOW1M_BASE					0xC0500000
 #define   PMODE_VIDEO_BASE					(PAGE_LOW1M_BASE + 0x000B8000)
@@ -22,9 +23,13 @@
 #define		PT_ACCESSED  0x020
 #define		PT_DIRTY     0x040
 
+#define KB(x)                    ((uint32)x<<10)
+#define MB(x)                    ((uint32)x<<20)
+#define GB(x)                    ((uint32)x<<30)
+
 class PAGE_FRAME_DB
 {
-	static byte*	m_page_frame_database;
+	static byte*		m_page_frame_database;
 
 	static uint32	m_page_frame_min;
 	static uint32	m_page_frame_max;
@@ -35,4 +40,7 @@ public:
 	static uint32	alloc_physical_pages(uint32 pages);
 	static void		free_physical_page(uint32 page);
 	static void		free_physical_pages(uint32  start_page, uint32 pages);
+	static uint32	map_pages(uint32 physical_address, uint32 virtual_address, int size, int protect);
+	static void		unmap_pages(uint32 virtual_address, int size);
+
 };

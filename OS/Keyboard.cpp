@@ -1,29 +1,43 @@
-#include "Keyboard.h"
+#include "keyboard.h"
 #include "stdio.h"
 #include "vga.h"
+#include "system.h"
 
-byte Keyboard::led_status = 0;
-byte Keyboard::control_keys = 0;
-int  Keyboard::ext = 0;
-
-void Keyboard::Init()
+KBD::KBD()
 {
-	PIC::register_irq(IRQ_KEYBOARD, Keyboard::irq_handler);
+	led_status = 0;
+	control_keys = 0;
+	ext = 0;
 }
 
-void Keyboard::irq_handler(PIC_IRQ_CONTEXT* context)
+KBD::~KBD()
+{
+
+}
+
+void KBD::Init()
+{
+	PIC::register_irq(IRQ_KEYBOARD, KBD::kbd_irq_handler);
+}
+
+void   KBD::kbd_irq_handler(PIC_IRQ_CONTEXT* context)
+{
+	System.m_kbd.irq_handler(context);
+}
+
+void KBD::irq_handler(PIC_IRQ_CONTEXT* context)
 {
 	unsigned char status;
 
 	while ((status = __inbyte(KBD_STATUS)) & KBD_STAT_OBF)
 	{
-		byte scancode = __inbyte(KBD_DATA);	// Get next scancode from keyboard
+		byte scancode = __inbyte(KBD_DATA);	// Get next scancode from KBD
 		uint32 key = decode(scancode);// Process scan code
 		if (key) putc(key);
 	}
 }
 
-uint32 Keyboard::decode(byte scancode)
+uint32 KBD::decode(byte scancode)
 {
 	enum SCANCODE 
 	{

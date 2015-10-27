@@ -22,17 +22,20 @@
 #define KBD_STAT_GTO            0x40    // General receive/xmit timeout
 #define KBD_STAT_PERR           0x80    // Parity error
 
-class Keyboard
+class KBD
 {
 private:
-	static byte led_status;
-	static byte control_keys;
-	static int ext;
+	byte led_status;
+	byte control_keys;
+	int ext;
 private:
-	static void   irq_handler(PIC_IRQ_CONTEXT* context);
-	static uint32 decode(byte scancode);
+	static void   kbd_irq_handler(PIC_IRQ_CONTEXT* context);
+	void   irq_handler(PIC_IRQ_CONTEXT* context);
+	uint32 decode(byte scancode);
 public:
-	static void Init();
+	KBD();
+	~KBD();
+	void Init();
 	
 };
 

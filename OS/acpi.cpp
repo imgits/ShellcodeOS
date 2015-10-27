@@ -89,15 +89,15 @@ bool ACPI::ParseRSDP(ACPI_RSDP10* rsdp)
 
 		if (xsdtAddr)
 		{
-			m_mmu->map_memory(xsdtAddr, xsdtAddr, 4096);
+			//m_mmu->map_memory(xsdtAddr, xsdtAddr, 4096, PT_PRESENT | PT_WRITABLE);
 			ParseXSDT((ACPI_XSDT*)xsdtAddr);
-			m_mmu->unmap_memory(xsdtAddr, 4096);
+			//m_mmu->unmap_memory(xsdtAddr, 4096);
 		}
 		else
 		{
-			m_mmu->map_memory(rsdtAddr, rsdtAddr, 4096);
+			//m_mmu->map_memory(rsdtAddr, rsdtAddr, 4096, PT_PRESENT | PT_WRITABLE);
 			ParseRSDT((ACPI_RSDT*)rsdtAddr);
-			m_mmu->unmap_memory(rsdtAddr, 4096);
+			//m_mmu->unmap_memory(rsdtAddr, 4096);
 		}
 	}
 	else

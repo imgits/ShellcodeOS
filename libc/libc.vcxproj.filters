@@ -66,6 +66,9 @@
     <ClCompile Include="aullshr_asm.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="disk.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vsprintf.h">
@@ -90,6 +93,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stdio.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="disk.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

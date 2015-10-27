@@ -1,12 +1,12 @@
 #include "system.h"
 
+SYSTEM* SystemObject = NULL;
 
-
-System::System()
+SYSTEM::SYSTEM()
 {
 }
 
 
-System::~System()
+SYSTEM::~SYSTEM()
 {
 }
