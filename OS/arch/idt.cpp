@@ -9,7 +9,6 @@ void  __declspec(naked) irq_default_entry()
 	__asm iretd
 }
 
-IDT g_idt;
 
 IDT::IDT()
 {
@@ -24,7 +23,7 @@ void IDT::Init()
 {
 	__asm cli
 
-	for (int i = 0x30; i < MAX_IDT_NUM; i++)
+	for (int i = 0; i < MAX_IDT_NUM; i++)
 	{
 		set_idt_entry(i, IDT_INTR_GATE, irq_default_entry);
 	}

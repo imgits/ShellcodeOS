@@ -3,26 +3,13 @@
 #include "vga.h"
 #include "system.h"
 
-KBD::KBD()
-{
-	led_status = 0;
-	control_keys = 0;
-	ext = 0;
-}
-
-KBD::~KBD()
-{
-
-}
+byte KBD::m_led_status=0;
+byte KBD::m_control_keys=0;
+int  KBD::m_ext=0;
 
 void KBD::Init()
 {
-	PIC::register_irq(IRQ_KEYBOARD, KBD::kbd_irq_handler);
-}
-
-void   KBD::kbd_irq_handler(PIC_IRQ_CONTEXT* context)
-{
-	System.m_kbd.irq_handler(context);
+	PIC::register_irq(IRQ_KEYBOARD, KBD::irq_handler);
 }
 
 void KBD::irq_handler(PIC_IRQ_CONTEXT* context)

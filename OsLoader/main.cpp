@@ -5,8 +5,6 @@
 #include "mmu.h"
 #include "kernel_file.h"
 
-
-
 char    os_kernel_filename[256] = "\\os\\scos.exe";
 
 #define KERNEL_BASE	0x80000000

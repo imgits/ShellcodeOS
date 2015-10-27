@@ -1,7 +1,10 @@
 #include "trap.h"
 #include "stdio.h"
+#include <string.h>
 
-#define EXCEPTION_WITH_ERROR_CODE(int_no) \
+#define TRAP_WITH_ERROR_CODE(int_no) \
+void __declspec(naked) trap_entry_##int_no()  \
+{  \
 	__asm cli \
 	/*__asm push -1  错误吗 */ \
 	__asm push		int_no  /*中断向量*/ \
@@ -12,7 +15,7 @@
 	__asm push		gs \
 	__asm mov		eax,		esp \
 	__asm push      eax \
-	__asm call			exception_dispatch \
+	__asm call		TRAP::dispatch \
 	__asm pop       eax \
 	__asm pop		gs \
 	__asm pop		fs \
@@ -21,10 +24,12 @@
 	__asm popad		\
 	__asm add		esp, 8 /*跳过中断向量、错误码*/ \
 	__asm sti \
-	__asm iretd
+	__asm iretd \
+}
 
-
-#define EXCEPTION_WITHOUT_ERROR_CODE(int_no) \
+#define TRAP_NO_ERROR_CODE(int_no) \
+void __declspec(naked) trap_entry_##int_no()  \
+{  \
 	__asm cli \
 	__asm push -1  /* 错误吗 */ \
 	__asm push		int_no  /*中断向量*/ \
@@ -35,7 +40,7 @@
 	__asm push		gs \
 	__asm mov		eax,		esp \
 	__asm push      eax \
-    __asm call		exception_dispatch \
+    __asm call		TRAP::dispatch \
 	__asm pop       eax \
 	__asm pop		gs \
 	__asm pop		fs \
@@ -44,244 +49,265 @@
 	__asm popad		\
 	__asm add		esp, 8 /*跳过中断向量、错误码*/ \
 	__asm sti \
-	__asm iretd
+	__asm iretd \
+}
 
 #pragma warning (disable:4100)
 
-#define INTERRUPT __declspec(naked) 
+TRAP_NO_ERROR_CODE(0) //除法错误 
+TRAP_NO_ERROR_CODE(1) //单步调试	INT 1
+TRAP_NO_ERROR_CODE(2) //非屏蔽中断NMI
+TRAP_NO_ERROR_CODE(3) //断点	INT 3
+TRAP_NO_ERROR_CODE(4) //溢出中断	INTO
+TRAP_NO_ERROR_CODE(5) //边界越界  BOUND
+TRAP_NO_ERROR_CODE(6) //无效指令   UD2
+TRAP_NO_ERROR_CODE(7) //! device not available
+TRAP_WITH_ERROR_CODE(8) //! double fault
+TRAP_NO_ERROR_CODE(9)	//协处理器跨段
+TRAP_WITH_ERROR_CODE(10)//无效TSS
+TRAP_WITH_ERROR_CODE(11)//段不存在
+TRAP_WITH_ERROR_CODE(12)//栈故障
+TRAP_WITH_ERROR_CODE(13)//常规保护
+TRAP_WITH_ERROR_CODE(14)//页故障
+TRAP_WITH_ERROR_CODE(15)//15(0x0F) 因特尔保留
+TRAP_NO_ERROR_CODE(16)//浮点处理器错误
+TRAP_WITH_ERROR_CODE(17)//对齐检查
+TRAP_NO_ERROR_CODE(18)//机器检查
+TRAP_NO_ERROR_CODE(19)//SIMD异常
+
+
 #define EFLAGS_TF	0x00000100
 
-void __cdecl page_fault(TRAP_CONTEXT* context)
-{
-	__asm cli
-	uint32 errcode = context->err_code & 0x7;
-	uint32 virt_addr = 0;
-	__asm mov eax, cr2
-	__asm mov virt_addr, eax
-	switch (errcode)
-	{
-	case 0://系统级 读 不存在的页面
-	case 1://系统级 读 违反页面保护权限
-	case 2://系统级 写 不存在的页面
-	case 3://系统级 写 违反页面保护权限
-		printf("Kernel page default: errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", errcode, virt_addr, context->cs, context->eip);
-		__asm hlt //停机
-		break;
-	case 4://用户级 读 不存在的页面
-	case 6://用户级 写 不存在的页面
+#define SET_TRAP_ENTRY(irq_no) idt->set_trap_gate(irq_no,trap_entry_##irq_no)
 
-		//if (virt_addr >= g_Shellcode.m_start_addr && virt_addr < g_Shellcode.m_end_addr)
-		{
-		}
-		break;
-	case 5://用户级 读 违反页面保护权限
+#define TRAP_ENTRY(irq_no) trap_entry_##irq_no
 
-	case 7://用户级 写 违反页面保护权限
-		break;
-	}
 
-	printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, virt_addr, context->cs, context->eip);
-	//Pager::set_mem_attribute(virt_addr & 0xFFFFF000, PAGE_SIZE, PAGE_ATTR_PRESENT | PAGE_ATTR_WRITE | PAGE_ATTR_USER);
-	context->eflags |= EFLAGS_TF;
-	//__asm hlt
-}
-//void __cdecl exception_handler(
-//	uint32 _edi,  uint32 _esi, uint32 _ebp, uint32 _esp,
-//	uint32 _ebx, uint32 _edx,uint32 _ecx,  uint32 _eax,
-//	uint32 int_no, uint32 errorcode,
-//	uint32 _eip,	uint32 _cs,  uint32 _eflags)
-void __cdecl exception_dispatch(TRAP_CONTEXT* context)
+void TRAP::dispatch(TRAP_CONTEXT* context)
 {
 	uint32 _CR2 = 0;
-	uint32 virt_addr = 0;
-/*
-	switch (context->int_no)
+	uint32 irq_no = context->irq_no;
+	if (irq_no >= MAX_TRAP_ENTRIES)
 	{
-	case 0:
-		context->eip += 2;
-		printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, _CR2, context->cs, context->eip);
-		if (context->eip >= g_Shellcode.m_page0 && context->eip < g_Shellcode.m_page2 + PAGE_SIZE - 16)
-		{
-			context->eip = g_Shellcode.next_start_pos();
-		}
-		else
-		{
-			__asm hlt
-		}
-		break;
-	case 1:
-		printf("Setp Debug\n");
-		printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, _CR2, context->cs, context->eip);
-		if (context->eip >= g_Shellcode.m_page0 && context->eip < g_Shellcode.m_page2 + PAGE_SIZE - 16)
-		{
-			context->eip = g_Shellcode.next_start_pos();
-		}
-		else
-		{
-			__asm hlt
-		}
-		//__asm hlt
-		break;
-	case 14:
-		//g_Shellcode.page_fault(context);
-		break;
-	default:
-		printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, _CR2, context->cs, context->eip);
-		if (context->eip >= g_Shellcode.m_page0 && context->eip < g_Shellcode.m_page2 + PAGE_SIZE - 16)
-		{
-			context->eip = g_Shellcode.next_start_pos();
-		}
-		else
-		{
-			__asm hlt
-		}
-		break;
+		return;
 	}
-	*/
+	if (TRAP::m_handlers[irq_no] != NULL)
+	{
+		TRAP::m_handlers[irq_no](context);
+		return;
+	}
+	switch (irq_no)
+	{
+	case 0:TRAP::handler0(context);break;
+	case 1:TRAP::handler1(context);break;
+	case 2:TRAP::handler2(context);break;
+	case 3:TRAP::handler3(context);break;
+	case 4:TRAP::handler4(context);break;
+	case 5:TRAP::handler5(context);break;
+	case 6:TRAP::handler6(context);break;
+	case 7:TRAP::handler7(context);break;
+	case 8:TRAP::handler8(context);break;
+	case 9:TRAP::handler9(context);break;
+	case 10:TRAP::handler10(context);break;
+	case 11:TRAP::handler11(context);break;
+	case 12:TRAP::handler12(context);break;
+	case 13:TRAP::handler13(context);break;
+	case 14:TRAP::handler14(context);break;
+	case 15:TRAP::handler15(context);break;
+	case 16:TRAP::handler16(context);break;
+	case 17:TRAP::handler17(context);break;
+	case 18:TRAP::handler18(context);break;
+	case 19:TRAP::handler19(context);break;
+	}
 }
 
-#ifndef EXCEPTION_HANDLER_XX
-//除法错误
-void INTERRUPT divide_by_zero_fault_0x00()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(0);
-}
-
-//单步调试	INT 1
-void  INTERRUPT single_step_trap_0x01()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(1);
-}
-
-//非屏蔽中断NMI
-void  INTERRUPT nmi_trap_0x02()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(2);
-}
-
-//断点	INT 3
-void  INTERRUPT breakpoint_trap_0x03()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(3);
-}
-
-//溢出中断	INTO
-void  INTERRUPT overflow_trap_0x04()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(4);
-}
-
-//边界越界  BOUND
-void  INTERRUPT bounds_check_fault_0x05()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(5);
-}
-
-//无效指令   UD2
-void  INTERRUPT invalid_opcode_fault_0x06()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(6);
-}
-
-//! device not available
-void  INTERRUPT no_device_fault_0x07()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(7);
-}
-
-//! double fault
-void  INTERRUPT double_fault_abort_0x08()
-{
-	EXCEPTION_WITH_ERROR_CODE(8);
-}
-
-//协处理器跨段
-void  INTERRUPT invalid_tss_fault_0x09()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(9);
-}
-
-//无效TSS
-void  INTERRUPT invalid_tss_fault_0x0A()
-{
-	EXCEPTION_WITH_ERROR_CODE(10);
-}
-
-//段不存在
-void  INTERRUPT no_segment_fault_0x0B()
-{
-	EXCEPTION_WITH_ERROR_CODE(11);
-}
-
-//栈故障
-void  INTERRUPT stack_fault_0x0C()
-{
-	EXCEPTION_WITH_ERROR_CODE(12);
-}
-
-//常规保护
-void  INTERRUPT general_protection_fault_0x0D()
-{
-	EXCEPTION_WITH_ERROR_CODE(13);
-}
-
-//页故障
-void INTERRUPT page_fault_0x0E()
-{
-	EXCEPTION_WITH_ERROR_CODE(14);
-}
-
-//15(0x0F) 因特尔保留
-
-//浮点处理器错误
-void  INTERRUPT fpu_fault_0x10()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(16);
-}
-
-//对齐检查
-void  INTERRUPT alignment_check_fault_0x11()
-{
-	EXCEPTION_WITH_ERROR_CODE(17);
-}
-
-//机器检查
-void  INTERRUPT machine_check_abort_0x12()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(18);
-}
-
-//SIMD异常
-void  INTERRUPT simd_fpu_fault_0x13()
-{
-	EXCEPTION_WITHOUT_ERROR_CODE(19);
-}
 
 //20-31(0x14--0x1F) 因特尔保留
 
-#endif //EXCEPTION_HANDLER_XX
+TRAP_HANDLER TRAP::m_handlers[];
 
 void TRAP::Init(IDT* idt)
 {
-	//idt->set_idt_entry(0, DA_386TGate, divide_by_zero_fault_0x00);
-	//idt->set_idt_entry(1, DA_386TGate, single_step_trap_0x01);
-	//idt->set_idt_entry(2, DA_386TGate, nmi_trap_0x02);
-	//idt->set_idt_entry(3, DA_386TGate, breakpoint_trap_0x03);
-	//idt->set_idt_entry(4, DA_386TGate, overflow_trap_0x04);
-	//idt->set_idt_entry(5, DA_386TGate, bounds_check_fault_0x05);
-	//idt->set_idt_entry(6, DA_386TGate, invalid_opcode_fault_0x06);
-	//idt->set_idt_entry(7, DA_386TGate, no_device_fault_0x07);
-	//idt->set_idt_entry(8, DA_386TGate, double_fault_abort_0x08);
-	//idt->set_idt_entry(9, DA_386TGate, invalid_tss_fault_0x09);
-	//idt->set_idt_entry(10, DA_386TGate, invalid_tss_fault_0x0A);
-	//idt->set_idt_entry(11, DA_386TGate, no_segment_fault_0x0B);
-	//idt->set_idt_entry(12, DA_386TGate, stack_fault_0x0C);
-	//idt->set_idt_entry(13, DA_386TGate, general_protection_fault_0x0D);
-	//idt->set_idt_entry(14, DA_386TGate, page_fault_0x0E);
-
-	//idt->set_idt_entry(16, DA_386TGate, fpu_fault_0x10);
-	//idt->set_idt_entry(17, DA_386TGate, alignment_check_fault_0x11);
-	//idt->set_idt_entry(18, DA_386TGate, machine_check_abort_0x12);
-	//idt->set_idt_entry(19, DA_386TGate, simd_fpu_fault_0x13);
+	SET_TRAP_ENTRY(0);
+	SET_TRAP_ENTRY(1);
+	SET_TRAP_ENTRY(2);
+	SET_TRAP_ENTRY(3);
+	SET_TRAP_ENTRY(4);
+	SET_TRAP_ENTRY(5);
+	SET_TRAP_ENTRY(6);
+	SET_TRAP_ENTRY(7);
+	SET_TRAP_ENTRY(8);
+	SET_TRAP_ENTRY(9);
+	SET_TRAP_ENTRY(10);
+	SET_TRAP_ENTRY(11);
+	SET_TRAP_ENTRY(12);
+	SET_TRAP_ENTRY(13);
+	SET_TRAP_ENTRY(14);
+	SET_TRAP_ENTRY(15);
+	SET_TRAP_ENTRY(16);
+	SET_TRAP_ENTRY(17);
+	SET_TRAP_ENTRY(18);
+	SET_TRAP_ENTRY(19);
+	memset(m_handlers, 0, sizeof(m_handlers));
 }
+
+void TRAP::register_handler(int irq_no, TRAP_HANDLER handler)
+{
+	if (irq_no >= 0 && irq_no < MAX_TRAP_ENTRIES)
+	{
+		TRAP::m_handlers[irq_no] = handler;
+	}
+
+}
+
+//除法错误 
+void TRAP::handler0(TRAP_CONTEXT* context)
+{
+	//context->eip += 2;
+	//printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, _CR2, context->cs, context->eip);
+	//if (context->eip >= g_Shellcode.m_page0 && context->eip < g_Shellcode.m_page2 + PAGE_SIZE - 16)
+	//{
+	//	context->eip = g_Shellcode.next_start_pos();
+	//}
+	//else
+	//{
+	//	__asm hlt
+	//}
+
+}
+//单步调试	INT 1
+void TRAP::handler1(TRAP_CONTEXT* context)
+{
+	//printf("Setp Debug\n");
+	//printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, _CR2, context->cs, context->eip);
+	//if (context->eip >= g_Shellcode.m_page0 && context->eip < g_Shellcode.m_page2 + PAGE_SIZE - 16)
+	//{
+	//	context->eip = g_Shellcode.next_start_pos();
+	//}
+	//else
+	//{
+	//	__asm hlt
+	//}
+}
+//非屏蔽中断NMI
+void TRAP::handler2(TRAP_CONTEXT* context)
+{
+
+}
+//断点	INT 3
+void TRAP::handler3(TRAP_CONTEXT* context)
+{
+
+}
+//溢出中断	INTO
+void TRAP::handler4(TRAP_CONTEXT* context)
+{
+
+}
+//边界越界  BOUND
+void TRAP::handler5(TRAP_CONTEXT* context)
+{
+
+}
+//无效指令   UD2
+void TRAP::handler6(TRAP_CONTEXT* context)
+{
+
+}
+//! device not available
+void TRAP::handler7(TRAP_CONTEXT* context)
+{
+
+}
+//! double fault
+void TRAP::handler8(TRAP_CONTEXT* context)
+{
+
+}
+//协处理器跨段
+void TRAP::handler9(TRAP_CONTEXT* context)
+{
+
+}
+//无效TSS
+void TRAP::handler10(TRAP_CONTEXT* context)
+{
+
+}
+//段不存在
+void TRAP::handler11(TRAP_CONTEXT* context)
+{
+
+}
+//栈故障
+void TRAP::handler12(TRAP_CONTEXT* context)
+{
+
+}
+//常规保护
+void TRAP::handler13(TRAP_CONTEXT* context)
+{
+
+}
+//页故障
+void TRAP::handler14(TRAP_CONTEXT* context)
+{
+		__asm cli
+		uint32 errcode = context->err_code & 0x7;
+		uint32 virt_addr = 0;
+		__asm mov eax, cr2
+		__asm mov virt_addr, eax
+		switch (errcode)
+		{
+		case 0://系统级 读 不存在的页面
+		case 1://系统级 读 违反页面保护权限
+		case 2://系统级 写 不存在的页面
+		case 3://系统级 写 违反页面保护权限
+			printf("Kernel page default: errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", errcode, virt_addr, context->cs, context->eip);
+			__asm hlt //停机
+			break;
+		case 4://用户级 读 不存在的页面
+		case 6://用户级 写 不存在的页面
+
+			   //if (virt_addr >= g_Shellcode.m_start_addr && virt_addr < g_Shellcode.m_end_addr)
+		{
+		}
+		break;
+		case 5://用户级 读 违反页面保护权限
+
+		case 7://用户级 写 违反页面保护权限
+			break;
+		}
+
+		//printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, virt_addr, context->cs, context->eip);
+		//Pager::set_mem_attribute(virt_addr & 0xFFFFF000, PAGE_SIZE, PAGE_ATTR_PRESENT | PAGE_ATTR_WRITE | PAGE_ATTR_USER);
+		context->eflags |= EFLAGS_TF;
+		//__asm hlt
+}
+//15(0x0F) 因特尔保留
+void TRAP::handler15(TRAP_CONTEXT* context)
+{
+
+}
+//浮点处理器错误
+void TRAP::handler16(TRAP_CONTEXT* context)
+{
+
+}
+//对齐检查
+void TRAP::handler17(TRAP_CONTEXT* context)
+{
+
+}
+//机器检查
+void TRAP::handler18(TRAP_CONTEXT* context)
+{
+
+}
+//SIMD异常
+void TRAP::handler19(TRAP_CONTEXT* context)
+{
+
+}
+
 

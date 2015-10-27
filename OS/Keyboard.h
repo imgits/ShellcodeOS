@@ -25,17 +25,15 @@
 class KBD
 {
 private:
-	byte led_status;
-	byte control_keys;
-	int ext;
+	static byte m_led_status;
+	static byte m_control_keys;
+	static int  m_ext;
 private:
 	static void   kbd_irq_handler(PIC_IRQ_CONTEXT* context);
-	void   irq_handler(PIC_IRQ_CONTEXT* context);
-	uint32 decode(byte scancode);
+	static void   irq_handler(PIC_IRQ_CONTEXT* context);
+	static uint32 decode(byte scancode);
 public:
-	KBD();
-	~KBD();
-	void Init();
+	static void Init();
 	
 };
 

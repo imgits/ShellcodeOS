@@ -28,8 +28,8 @@ void GDT::Init()
 	set_gdt_entry(GDT_USER_DATA, 0x00000000, 0x0007FFFF, DA_DRW | DA_32 | DA_DPL3 | DA_LIMIT_4K);
 	set_gdt_entry(GDT_KERNEL_FS, 0xFFDFF000, 0x000003FF, DA_DRW | DA_32 | DA_DPL3);
 	set_gdt_entry(GDT_USER_FS,   0x7EFDD000, 0x000003FF, DA_DRW | DA_32 | DA_DPL3);
-	set_gdt_entry(GDT_USER_FS+1, 0x00010000, 0x0000FFFF, DA_CR  | DA_16 | DA_DPL0);
-	set_gdt_entry(GDT_USER_FS+2, 0x00010000, 0x0000FFFF, DA_DRW | DA_16 | DA_DPL0);
+	//set_gdt_entry(GDT_USER_FS+1, 0x00010000, 0x0000FFFF, DA_CR  | DA_16 | DA_DPL0);
+	//set_gdt_entry(GDT_USER_FS+2, 0x00010000, 0x0000FFFF, DA_DRW | DA_16 | DA_DPL0);
 
 	for (int i = 0; i < 8; i++)
 	{

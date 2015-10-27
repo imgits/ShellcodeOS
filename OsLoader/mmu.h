@@ -94,14 +94,11 @@ public:
 	void   startup_page_mode()
 	{
 		uint32 page_dir = (uint32)m_page_dir;
-		__asm
-		{
-			mov		eax, dword ptr[page_dir]
-			mov		cr3, eax
-				mov		eax, cr0
-				or eax, 0x80000000
-				mov		cr0, eax
-		}
+		__asm mov		eax, dword ptr[page_dir]
+		__asm mov		cr3, eax
+		__asm mov		eax, cr0
+		__asm or		eax, 0x80000000
+		__asm mov		cr0, eax
 		printf("Entry page mode\n");
 	}
 	
@@ -109,19 +106,6 @@ public:
 	{
 		return m_next_free_page_frame;
 	}
-
-	/*
-	void*   create_page_dir()
-	{
-		//分配页目录帧
-		//也可以理解为分配虚拟地址映射页表(0xC0000000~0xC03fffff)
-		//自映射到0xC0300000 = 0xC0000000 + (0xC0000000>>12)
-		m_page_dir = (uint32*)alloc_page_frame();
-		memset(m_page_dir, 0, PAGE_SIZE);
-		m_page_dir[PD_INDEX(PAGE_TABLE_BASE)] = (uint32)m_page_dir | PT_PRESENT | PT_WRITABLE;
-		return m_page_dir;
-	};
-	*/
 
 	uint32  alloc_page_frame()
 	{

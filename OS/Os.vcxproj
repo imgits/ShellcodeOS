@@ -67,6 +67,7 @@
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <AdditionalOptions>/Gs32768 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4391</DisableSpecificWarnings>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -95,11 +96,13 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="paging.cpp" />
+    <ClCompile Include="mem\paging.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="timer\rtc.cpp" />
     <ClCompile Include="timer\8253.cpp" />
-    <ClCompile Include="acpi.cpp" />
+    <ClCompile Include="acpi.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="arch\cpu.cpp" />
     <ClCompile Include="irq\trap.cpp" />
     <ClCompile Include="arch\gdt.cpp" />
@@ -126,11 +129,13 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./Release/callbios.obj</Outputs>
     </CustomBuild>
     <ClInclude Include="bios.h" />
-    <ClInclude Include="paging.h" />
+    <ClInclude Include="mem\paging.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="timer\rtc.h" />
     <ClInclude Include="timer\8253.h" />
-    <ClInclude Include="acpi.h" />
+    <ClInclude Include="acpi.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="arch\cpu.h" />
     <ClInclude Include="irq\trap.h" />
     <ClInclude Include="arch\gdt.h" />

@@ -5,12 +5,12 @@
 #define GDT_TO_SEL(gdt) ((gdt) << 3)
 
 #define GDT_NULL			0
-#define GDT_KERNEL_CODE	1
-#define GDT_KERNEL_DATA	2
+#define GDT_KERNEL_CODE		1
+#define GDT_KERNEL_DATA		2
 #define GDT_USER_CODE		3
 #define GDT_USER_DATA		4
 #define GDT_KERNEL_FS		5
-#define GDT_USER_FS		6
+#define GDT_USER_FS			6
 #define GDT_SYS_TSS		7
 #define GDT_TIB			8
 

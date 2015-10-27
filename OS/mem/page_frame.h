@@ -27,6 +27,9 @@
 #define MB(x)                    ((uint32)x<<20)
 #define GB(x)                    ((uint32)x<<30)
 
+#define PAGES_TO_SIZE(pages)	 ((uint32)(pages)<<12)
+#define SIZE_TO_PAGES(size)      (((uint32)(size) + PAGE_SIZE -1)>>12)
+
 class PAGE_FRAME_DB
 {
 	static byte*		m_page_frame_database;
