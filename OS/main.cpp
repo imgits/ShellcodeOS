@@ -20,6 +20,7 @@
 #include "rtc.h"
 #include "bios.h"
 #include "system.h"
+#include "liballoc.h"
 
 CPU			  cpu;
 
@@ -57,7 +58,7 @@ uint32 get_mem_info(memory_info& meminfo)
 	return memsize;
 }
 
-MMU<4096>	  kmem;
+
 void main(uint32 kernel_image_size)
 {
 	puts("\nHello world\n", 30);
@@ -73,7 +74,8 @@ void main(uint32 kernel_image_size)
 
 	System.Init(kernel_image_size, memsize);
 
-	PROCESS* proc = (PROCESS*)kmem.alloc(sizeof(PROCESS));
+	PROCESS* proc = (PROCESS*)malloc(sizeof(PROCESS));
+	printf("process=%08X\n", proc);
 	_enable();
 	panic("");
 	
