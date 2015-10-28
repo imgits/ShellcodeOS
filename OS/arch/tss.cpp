@@ -1,6 +1,7 @@
 #include "tss.h"
 #include "stdio.h"
 #include <string.h>
+#include <intrin.h>
 
 TSS::TSS()
 {
@@ -8,12 +9,12 @@ TSS::TSS()
 	memset(this, 0, sizeof(TSS)); //反向链=0
 }
 
-void TSS::Init(uint32 cr3, GDT * gdt)
+void TSS::Init(GDT * gdt)
 {
 	m_back_link = 0;
 	//m_esp0 = KERNEL_STACK_TOP;
 	m_ss0 = SEL_KERNEL_CODE;
-	m_cr3 = CR3();//登记CR3(PDBR)
+	m_cr3 = __readcr3();//登记CR3(PDBR)
 	m_eip = 0;//(uint32)UserProcess;
 	m_eflags = 0x00000202;
 

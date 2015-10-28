@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "pe.h"
 
-typedef void(*kernel_main)(uint32 kernel_image_size, uint32 next_free_page_frame);
+typedef void(*kernel_main)(uint32 kernel_image_size);
 
 class KERNEL_FILE
 {

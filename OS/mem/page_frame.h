@@ -2,12 +2,16 @@
 #include "typedef.h"
 
 #define   PAGE_SIZE							0x1000
+#define   PAGE_SIZE_BITS					12
 #define   PD_INDEX(virtual_addr)			((virtual_addr>>22))
 #define   PT_INDEX(virtual_addr)			((virtual_addr>>12)&0x3FF)
 
 #define   KERNEL_BASE						0x80000000
 #define   PAGE_TABLE_BASE					0xC0000000
-#define   PAGE_DIR_BASE					0xC0300000
+#define   PAGE_DIR_BASE						0xC0300000 //=(0xC0000000 + (0xC0000000>>12))
+#define   PT_BASE(virtual_addr)			    (PAGE_TABLE_BASE + PD_INDEX(virtual_addr)* PAGE_SIZE)
+#define   PTE(virtual_addr)			        (PAGE_TABLE_BASE + (virtual_addr>>12))
+
 #define   PAGE_FRAME_BASE					0xC0400000
 #define   PAGE_LOW1M_BASE					0xC0500000
 #define   PMODE_VIDEO_BASE					(PAGE_LOW1M_BASE + 0x000B8000)
@@ -32,7 +36,7 @@
 
 class PAGE_FRAME_DB
 {
-	static byte*		m_page_frame_database;
+	static byte*	m_page_frame_database;
 
 	static uint32	m_page_frame_min;
 	static uint32	m_page_frame_max;

@@ -78,6 +78,9 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <Lib>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="alldiv_asm.c" />
@@ -103,7 +106,7 @@
     <ClInclude Include="c++.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="Fat32.h" />
-    <ClInclude Include="intrin.h" />
+    <ClInclude Include="intrin_.h" />
     <ClInclude Include="liballoc.h" />
     <ClInclude Include="pe.h" />
     <ClInclude Include="stdio.h" />

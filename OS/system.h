@@ -10,15 +10,17 @@
 #include "idt.h"
 #include "tss.h"
 #include "mmu.h"
+#include "kernel.h"
 
 #define MAX_CPU_NUM					32
-#define OS_KERNEL_BASE				0x80000000
-#define SYSTEM_OBJECT_BASE			0xBFFFE000
 
-#define panic(fmt,...) { printf("%s::%s() line %d:%s\n",__FILE__,__FUNCTION__,__LINE__, fmt, __VA_ARGS__); __asm jmp $}
+//#define SYSTEM_OBJECT_BASE			0xBFFFE000
 
 class SYSTEM //: public Object
 {
+private:
+	uint32 m_kernel_size;
+	uint32 m_mem_size;
 public:
 	friend KBD;
 	friend PAGE_FRAME_DB;
@@ -33,7 +35,7 @@ public:
 public:
 	SYSTEM();
 	~SYSTEM();
-	bool Init(uint32 page_frame_min, uint32 page_frame_max);
+	bool Init(uint32 kernel_image_size,uint32 mem_size);
 };
 
 extern  SYSTEM System;

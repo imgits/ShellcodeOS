@@ -96,7 +96,9 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="lock.cpp" />
     <ClCompile Include="mem\paging.cpp" />
+    <ClCompile Include="process.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="timer\rtc.cpp" />
     <ClCompile Include="timer\8253.cpp" />
@@ -129,7 +131,10 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./Release/callbios.obj</Outputs>
     </CustomBuild>
     <ClInclude Include="bios.h" />
+    <ClInclude Include="lock.h" />
     <ClInclude Include="mem\paging.h" />
+    <ClInclude Include="object.h" />
+    <ClInclude Include="process.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="timer\rtc.h" />
     <ClInclude Include="timer\8253.h" />

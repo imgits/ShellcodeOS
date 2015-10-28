@@ -89,13 +89,13 @@
     <ClInclude Include="liballoc.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="intrin.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="stdio.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="disk.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="intrin_.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

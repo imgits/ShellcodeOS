@@ -10,21 +10,22 @@ bool   PAGE_FRAME_DB::Init(uint32 page_frame_min, uint32 page_frame_max)
 {
 	m_page_frame_min = page_frame_min;
 	m_page_frame_max = page_frame_max;
-	m_next_free_page_frame = m_page_frame_min;
 
-	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
-	uint32*  page_table = (uint32*)(m_page_frame_min++ * PAGE_SIZE);
-	page_dir[PD_INDEX(PAGE_FRAME_BASE)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+	uint32* page_dir   = (uint32*) PAGE_DIR_BASE;
+	uint32  pd_index = PD_INDEX(PAGE_FRAME_BASE);
+	uint32  page_table_PA = m_page_frame_min++ * PAGE_SIZE;
+	uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
+	page_dir[pd_index] = (uint32)page_table_PA | PT_PRESENT | PT_WRITABLE;
+
 	//为page_frame_db分配4M物理内存
-	uint32  page_frame_start = m_page_frame_min;
-	m_page_frame_min += MB(4) >> 12;
 	for (int i = 0; i < MB(4) >> 12; i++)
 	{
-		uint32 pa = (page_frame_start + i)* PAGE_SIZE;
+		uint32 pa = m_page_frame_min++ * PAGE_SIZE;
 		uint32 va = PAGE_FRAME_BASE + i * PAGE_SIZE;
-		page_table[i] = pa | PT_PRESENT | PT_WRITABLE;
+		page_table_VA[i] = pa | PT_PRESENT | PT_WRITABLE;
 		memset((void*)va, 0, PAGE_SIZE);
 	}
+	m_next_free_page_frame = m_page_frame_min;
 	return true;
 }
 

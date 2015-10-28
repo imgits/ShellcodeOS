@@ -153,7 +153,7 @@ void setchar(int x, int y, char ch, char fore, char back)
 //extern "C" int __cdecl printf(const char *fmt, ...);
 //extern "C" int __cdecl sprintf(char *buf, const char *fmt, ...);
 //extern "C" int __cdecl vsprintf(char *buf, const char *fmt, va_list args);
-int __cdecl printf(const char *fmt, ...)
+extern "C" int __cdecl printf(const char *fmt, ...)
 {
 	char buf[1024];
 	va_list args;

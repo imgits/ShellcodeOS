@@ -1,5 +1,8 @@
 #include "liballoc.h"
 
+extern int __cdecl printf(const char *fmt, ...);
+
+
 /**  Durand's Ridiculously Amazing Super Duper Memory functions.  */
 
 //#define DEBUG	
@@ -131,7 +134,7 @@ static void dump_array()
 	}
 
 	printf("'*' denotes a split to the left/right of a tag\n");
-	fflush(stdout);
+	//fflush(stdout);
 }
 #endif
 

@@ -68,14 +68,14 @@ endstruc
 ;|要么将代码映射到其它段，如0x0000:7E00                 |
 ;+------------------------------------------------------+
 
-%define CODE_BASE						        0x7C00
+%define CODE_BASE						        0x7E00
 %define REBASE(addr)                           (CODE_BASE + (addr - reloc_base))
 
 %define CODE32                                 0x08
 %define DATA32                                 0x10
 %define CODE16                                 0x18
 %define DATA16                                 0x20
-%define STACK16                                (CODE_BASE - regs16_t_size)
+%define STACK16                                (0x10000 - regs16_t_size)
 
         SECTION .text
 

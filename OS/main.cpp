@@ -12,22 +12,16 @@
 #include "cpu.h"
 #include "tss.h"
 #include "mmu.h"
-//#include "acpi.h"
+#include "process.h"
 #include "trap.h"
 #include "8253.h"
 #include "8259.h"
 #include "keyboard.h"
 #include "rtc.h"
 #include "bios.h"
+#include "system.h"
 
-PAGE_FRAME_DB  page_frame_db;
 CPU			  cpu;
-GDT			  gdt;
-IDT			  idt;
-TSS           tss;
-MMU<0x1000>	  kernel_mmu;
-MMU<0x10000>  user_mmu;
-TRAP		  trap;
 
 uint32 get_mem_info(memory_info& meminfo)
 {
@@ -63,8 +57,8 @@ uint32 get_mem_info(memory_info& meminfo)
 	return memsize;
 }
 
-
-void main(uint32 kernel_image_size, uint32 next_free_page_frame)
+MMU<4096>	  kmem;
+void main(uint32 kernel_image_size)
 {
 	puts("\nHello world\n", 30);
 	puts("Shellcode OS is starting...\n", 30);
@@ -76,26 +70,13 @@ void main(uint32 kernel_image_size, uint32 next_free_page_frame)
 
 	printf("memsize=%08X(%dMb)\n", memsize, memsize >> 20);
 	//PAGE_FRAME_DB::Init(next_free_page_frame, 0xfffff);
+
+	System.Init(kernel_image_size, memsize);
+
+	PROCESS* proc = (PROCESS*)kmem.alloc(sizeof(PROCESS));
+	_enable();
+	panic("");
 	
-	printf("sizeof(kernel_mmu)=%d sizeof(user_mmu)=%d\n", sizeof(kernel_mmu), sizeof(user_mmu));
-	
-	kernel_mmu.Init(0,0);
-	user_mmu.Init(0, 0);
-
-	//ACPI acpi;
-	//acpi.Init(&mmu);
-
-	uint32 CR3 = __readcr3();
-	printf("PageDir=%08X\n", CR3);
-
-	gdt.Init();
-	idt.Init();
-	tss.Init(CR3,&gdt);
-	trap.Init(&idt);
-	PIC::Init(&idt);
-	PIT::Init();
-	RTC::Init();
-	//Keyboard::Init();
 	_enable();
 	__asm jmp $
 }

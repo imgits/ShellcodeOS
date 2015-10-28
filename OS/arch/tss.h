@@ -29,15 +29,9 @@ private:
 public:
 	TSS();
 	~TSS();
-	void Init(uint32 cr3, GDT * gdt);
+	void Init(GDT * gdt);
 
 private:
 	bool   Register(GDT * gdt);
-	inline uint32 CR3()
-	{
-		uint32 _cr3;
-		__asm mov	eax, cr3
-		__asm mov	_cr3, eax
-		return _cr3;
-	}
+
 };

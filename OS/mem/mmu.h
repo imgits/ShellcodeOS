@@ -1,5 +1,6 @@
 #pragma once
 #include "page_frame.h"
+#include "liballoc.h"
 
 #define  PAGE_DIR	_BASE		0xC0300000
 #define  PAGE_TABLE_BASE		0xC0000000
@@ -125,6 +126,12 @@ public:
 		free_virtual_space(start_address, size);
 		PAGE_FRAME_DB::unmap_pages(start_address, size);
 		return true;
+	}
+
+	void*	alloc(uint32 size)
+	{
+		void* ptr = ::malloc(size);
+		return ptr;
 	}
 };
 

@@ -7,8 +7,6 @@
 
 char    os_kernel_filename[256] = "\\os\\scos.exe";
 
-#define KERNEL_BASE	0x80000000
-
 void	main(byte boot_drive)
 {
 	puts("Hello world\n", 10);
@@ -24,9 +22,10 @@ void	main(byte boot_drive)
 	uint32 kernel_image_size = kernel_file.image_size();
 	char * kernel_buf = (char*)mmu.alloc_memory(KERNEL_BASE,kernel_image_size);
 	kernel_file.load(kernel_buf, kernel_image_size);
-
+	printf("next_free_page_frame=%08X\n", mmu.next_free_page_frame());
+	//panic("");
 	kernel_main os_main = kernel_file.entry_point();
-	os_main(kernel_image_size, mmu.next_free_page_frame());
+	os_main(kernel_image_size);
 
 	__asm jmp $
 }
