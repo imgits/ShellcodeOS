@@ -33,6 +33,9 @@
 #define PAGES_TO_SIZE(pages)	 ((uint32)(pages)<<12)
 #define SIZE_TO_PAGES(size)      (((uint32)(size) + PAGE_SIZE -1)>>12)
 
+#define USER_SPACE(addr)       (((uint32)addr) < KERNEL_BASE)
+#define KERNEL_SPACE(addr)     (((uint32)addr) >= KERNEL_BASE)
+
 struct memory_info;
 
 class PAGE_FRAME_DB

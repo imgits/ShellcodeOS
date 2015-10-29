@@ -12,17 +12,15 @@
 #include "mmu.h"
 #include "kernel.h"
 #include "bios.h"
+#include "process.h"
 
 #define MAX_CPU_NUM					32
-
-//#define SYSTEM_OBJECT_BASE			0xBFFFE000
-struct memory_info;
 
 class SYSTEM //: public Object
 {
 private:
 	uint32 m_kernel_image_size;
-	uint32 m_mem_size;
+	uint32 m_ram_size;
 	memory_info m_meminfo;
 public:
 	friend KBD;
@@ -31,15 +29,13 @@ private:
 	GDT    m_gdt;
 	IDT    m_idt;
 	TSS    m_tss;
+	PROCESS m_kproc;
 public:
-	uint32			m_cpu_count;
+	uint32				m_cpu_count;
 	CPU*				m_cpus[MAX_CPU_NUM];
 	MMU<KERNEL_BASE, GB(2), PAGE_SIZE>   m_kmem;
 private:
-	uint32 get_mem_size();
-	bool   map_mem_space();
-private:
-	bool   init_kernel_mem();
+	bool   init_kernel_mmu();
 public:
 	SYSTEM();
 	~SYSTEM();

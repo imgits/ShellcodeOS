@@ -75,6 +75,7 @@ void main(uint32 kernel_image_size)
 
 	PROCESS* proc = new PROCESS();
 	printf("process=%08X\n", (uint32)proc);
+
 	_enable();
 	panic("");
 	

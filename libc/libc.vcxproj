@@ -109,6 +109,7 @@
     <ClInclude Include="Fat32.h" />
     <ClInclude Include="intrin_.h" />
     <ClInclude Include="liballoc.h" />
+    <ClInclude Include="list.h" />
     <ClInclude Include="pe.h" />
     <ClInclude Include="stdio.h" />
     <ClInclude Include="vga.h" />

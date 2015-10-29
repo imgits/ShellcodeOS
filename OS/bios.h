@@ -80,7 +80,7 @@ public:
 			regs.edi &= 0x0f;
 
 			callbios(0x15, &regs);
-			if (regs.eflags & 0x00000001)
+			if (regs.eflags & 0x00000001) //jc 
 			{
 				printf("call BOIS INT 15h failed\n");
 				__asm jmp $
