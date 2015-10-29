@@ -1,6 +1,6 @@
 //http://wiki.osdev.org/Visual_C++_Runtime
 #include "c++.h"
-
+#include "liballoc.h"
 // Constructor prototypes
 typedef void(__cdecl *_PVFV)(void);
 typedef int(__cdecl *_PIFV)(void);
@@ -80,20 +80,22 @@ bool CppInit()
 void* __cdecl operator new(size_t size)
 {
 	// Allocate memory
-	return 0;
+	void *obj = malloc(size);
+	return obj;
 }
 
 void* __cdecl operator new[](size_t size)
 {
 	// Allocate memory
-	return 0;
+	void *obj = malloc(size);
+	return obj;
 }
 
 void __cdecl operator delete(void *p)
 {
-	if (p == 0)
+	if (p)
 	{
-		return;
+		free(p);
 	}
 
 	// Release allocated memory
@@ -101,9 +103,9 @@ void __cdecl operator delete(void *p)
 
 void __cdecl operator delete[](void *p)
 {
-	if (p == 0)
+	if (p)
 	{
-		return;
+		free(p);
 	}
 
 	// Release allocated memory

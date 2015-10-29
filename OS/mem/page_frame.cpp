@@ -1,42 +1,95 @@
 #include "page_frame.h"
 #include <string.h>
+#include "bios.h"
 
 byte*  PAGE_FRAME_DB::m_page_frame_database = (byte*)PAGE_FRAME_BASE;
+bool   PAGE_FRAME_DB::m_database_usable = false;
 uint32 PAGE_FRAME_DB::m_page_frame_min = 0;
 uint32 PAGE_FRAME_DB::m_page_frame_max = 0;
 uint32 PAGE_FRAME_DB::m_next_free_page_frame = 0;
 
-bool   PAGE_FRAME_DB::Init(uint32 page_frame_min, uint32 page_frame_max)
+bool   PAGE_FRAME_DB::Init(uint32 page_frame_used, memory_info* meminfo)
 {
-	m_page_frame_min = page_frame_min;
-	m_page_frame_max = page_frame_max;
+	m_page_frame_min = SIZE_TO_PAGES(MB(1)) + page_frame_used;
+	m_page_frame_max = 0;
+	m_database_usable = false;
 
-	uint32* page_dir   = (uint32*) PAGE_DIR_BASE;
-	uint32  pd_index = PD_INDEX(PAGE_FRAME_BASE);
-	uint32  page_table_PA = m_page_frame_min++ * PAGE_SIZE;
-	uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-	page_dir[pd_index] = (uint32)page_table_PA | PT_PRESENT | PT_WRITABLE;
+	//为page_frame_db分配1M物理内存,映射到0xC00400000-0xC004FFFFF
+	uint32  database_PA = alloc_physical_pages(SIZE_TO_PAGES(MB(1)));
+	PAGER::map_pages(database_PA, PAGE_FRAME_BASE, MB(1));
+	memset((void*)PAGE_FRAME_BASE, PAGE_FRAME_NONE, MB(1));
 
-	//为page_frame_db分配4M物理内存
-	for (int i = 0; i < MB(4) >> 12; i++)
-	{
-		uint32 pa = m_page_frame_min++ * PAGE_SIZE;
-		uint32 va = PAGE_FRAME_BASE + i * PAGE_SIZE;
-		page_table_VA[i] = pa | PT_PRESENT | PT_WRITABLE;
-		memset((void*)va, 0, PAGE_SIZE);
-	}
+	//将低端1M物理内存映射0xC00500000-0xC005FFFFF
+	PAGER::map_pages(0, PAGE_LOW1M_BASE, MB(1));
+
+	m_page_frame_max = map_mem_space(meminfo);
 	m_next_free_page_frame = m_page_frame_min;
+
+	m_database_usable = true;
+
 	return true;
+}
+
+uint32   PAGE_FRAME_DB::map_mem_space(memory_info* meminfo)
+{
+	uint64 memsize = 0;
+	for (int i = 0; i < meminfo->map_count;i++)
+	{
+		uint64 length = meminfo->mem_maps[i].length;
+		uint64 begin = meminfo->mem_maps[i].base_addr;
+		uint64 end = begin + length;
+		if (end < MB(1) || begin >= 0x100000000I64) continue;
+		switch (meminfo->mem_maps[i].type)
+		{
+		case MEMTYPE_RAM:
+			memsize = end;
+			for (int j = SIZE_TO_PAGES(begin); j < SIZE_TO_PAGES(end); j++)
+			{
+				m_page_frame_database[j] = PAGE_FRAME_FREE;
+			}
+			break;
+		case MEMTYPE_RESERVED: 
+			for (int j = SIZE_TO_PAGES(begin); j < SIZE_TO_PAGES(end); j++)
+			{
+				m_page_frame_database[j] = PAGE_FRAME_RESERVED;
+			}
+			break;
+		case MEMTYPE_ACPI: 
+			for (int j = SIZE_TO_PAGES(begin); j < SIZE_TO_PAGES(end); j++)
+			{
+				m_page_frame_database[j] = PAGE_FRAME_ACPI;
+			}
+			PAGER::map_pages(begin, begin, end - begin, PT_PRESENT | PT_READONLY);
+			break;
+		case MEMTYPE_NVS: 
+			for (int j = SIZE_TO_PAGES(begin); j < SIZE_TO_PAGES(end); j++)
+			{
+				m_page_frame_database[j] = PAGE_FRAME_NVS;
+			}
+			PAGER::map_pages(begin, begin, end - begin, PT_PRESENT | PT_READONLY);
+			break;
+		default:	
+			break;
+		}
+	}
+	return SIZE_TO_PAGES(memsize);
 }
 
 uint32 PAGE_FRAME_DB::alloc_physical_page()
 {
+	if (!m_database_usable)
+	{
+		uint32 addr = m_page_frame_min * PAGE_SIZE;
+		m_page_frame_min++;
+		return addr;
+	}
+
 	for (uint32 i = m_next_free_page_frame; i < m_page_frame_max; i++)
 	{
 		if (m_page_frame_database[i] == PAGE_FRAME_FREE)
 		{
 			m_next_free_page_frame = i + 1;
-			return i;
+			return i*PAGE_SIZE;
 		}
 	}
 	return 0;
@@ -53,6 +106,13 @@ void   PAGE_FRAME_DB::free_physical_page(uint32 page)
 
 uint32 PAGE_FRAME_DB::alloc_physical_pages(uint32 pages)
 {
+	if (!m_database_usable)
+	{
+		uint32 addr = m_page_frame_min * PAGE_SIZE;
+		m_page_frame_min+=pages;
+		return addr;
+	}
+
 	for (uint32 i = m_next_free_page_frame; i < m_page_frame_max - pages; i++)
 	{
 		if (m_page_frame_database[i] == PAGE_FRAME_FREE)
@@ -65,7 +125,7 @@ uint32 PAGE_FRAME_DB::alloc_physical_pages(uint32 pages)
 			if (j = i + pages)
 			{
 				m_next_free_page_frame = j;
-				return i;
+				return i*PAGE_SIZE;
 			}
 		}
 	}
@@ -84,49 +144,3 @@ void   PAGE_FRAME_DB::free_physical_pages(uint32  start_page, uint32 pages)
 	}
 }
 
-uint32 PAGE_FRAME_DB::map_pages(uint32 physical_addr, uint32 virtual_addr, int size, int protect)
-{
-	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
-
-	uint32 virtual_address = virtual_addr & 0xfffff000;
-	uint32 physical_address = physical_addr & 0xfffff000;
-	uint32 pages = ((virtual_addr - virtual_address) + size + PAGE_SIZE - 1) >> 12;
-	for (uint32 i = 0; i < pages; i++)
-	{
-		uint32 va = virtual_address + i * PAGE_SIZE;
-		uint32 pa = physical_address + i * PAGE_SIZE;
-		uint32 pd_index = PD_INDEX(va);
-		uint32 pt_index = PT_INDEX(va);
-		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-		if (page_dir[pd_index] == 0)
-		{
-			uint32  page_table_PA = alloc_physical_page();
-			page_dir[pd_index] = page_table_PA | PT_PRESENT | PT_WRITABLE;
-			memset(page_table_VA, 0, PAGE_SIZE);
-		}
-		page_table_VA[pt_index] = pa | protect;
-	}
-	return virtual_address;
-}
-
-void PAGE_FRAME_DB::unmap_pages(uint32 virtual_addr, int size)
-{
-	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
-
-	uint32 virtual_address = virtual_addr & 0xfffff000;
-	uint32 pages = ((virtual_addr - virtual_address) + size + PAGE_SIZE - 1) >> 12;
-
-	for (uint32 i = 0; i < pages; i++)
-	{
-		uint32 va = virtual_address + i * PAGE_SIZE;
-		uint32 pd_index = PD_INDEX(va);
-		uint32 pt_index = PT_INDEX(va);
-		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-		if (page_dir[pd_index] != 0)
-		{
-			uint32 page = page_table_VA[pt_index] >> 12;
-			page_table_VA[pt_index] = 0;
-			free_physical_page(page);
-		}
-	}
-}

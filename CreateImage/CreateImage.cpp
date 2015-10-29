@@ -55,7 +55,7 @@ struct MBR
 };
 
 #pragma pack(pop)
-
+//e:\shellcodeOS.vhd  bin\boot.bin bin\BootLdr.exe bin\OsLdr.exe l:\boot\OsLdr.exe bin\scOs.exe l:\os\ScOS.exe
 int _tmain(int argc, _TCHAR* argv[])
 {
 

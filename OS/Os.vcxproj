@@ -63,7 +63,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>.;arch;timer;irq;mem;../libc;</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <PreprocessorDefinitions>USE_DL_PREFIX;_X86_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;USE_DL_PREFIX;_X86_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <AdditionalOptions>/Gs32768 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4391</DisableSpecificWarnings>
@@ -82,7 +82,7 @@
       <FixedBaseAddress>false</FixedBaseAddress>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalOptions> /filealign:0x1000 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions> /filealign:0x1000 /INCREMENTAL:NO %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>../bin/scOS.exe</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\release;</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
@@ -99,6 +99,7 @@
     <ClCompile Include="lock.cpp" />
     <ClCompile Include="mem\paging.cpp" />
     <ClCompile Include="process.cpp" />
+    <ClCompile Include="syscall.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="timer\rtc.cpp" />
     <ClCompile Include="timer\8253.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="mem\paging.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="process.h" />
+    <ClInclude Include="syscall.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="timer\rtc.h" />
     <ClInclude Include="timer\8253.h" />

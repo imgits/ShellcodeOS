@@ -167,3 +167,17 @@ extern "C" int __cdecl printf(const char *fmt, ...)
 	return len;
 }
 
+extern "C" int __cdecl dprint(const char *fmt, ...)
+{
+	char buf[1024];
+	va_list args;
+	va_start(args, fmt);
+	int len = 0;
+	len = vsprintf(buf, fmt, args);
+	va_end(args);
+	if (len > sizeof(buf)) len = sizeof(buf) - 1;
+	buf[len] = 0;
+	puts(buf, 15, 0);
+	return len;
+}
+

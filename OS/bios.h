@@ -41,7 +41,7 @@ public:
 	BIOS()
 	{
 		uint32 callbios_size = (uint32)callbios_end - (uint32)callbios;
-		printf("callbios=%08X callbios_end=%08X size=%08X(%d)\n", callbios, callbios_end, callbios_size,  callbios_size);
+		printf("callbios=%08X callbios_end=%08X size=%08X(%d)\n", (uint32)callbios, (uint32)callbios_end, callbios_size,  callbios_size);
 	}
 
 	void putc(byte ch)
