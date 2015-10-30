@@ -93,7 +93,7 @@ public:
 		__asm mov		eax, dword ptr[page_dir]
 		__asm mov		cr3, eax
 		__asm mov		eax, cr0
-		__asm or		eax, 0x80000000
+		__asm or			eax, 0x80000000
 		__asm mov		cr0, eax
 		printf("Entry page mode\n");
 	}

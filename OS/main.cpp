@@ -57,6 +57,7 @@ uint32 get_mem_info(memory_info& meminfo)
 	}
 	return memsize;
 }
+#include "list.h"
 
 void main(uint32 kernel_image_size)
 {
@@ -73,9 +74,11 @@ void main(uint32 kernel_image_size)
 
 	System.Init(kernel_image_size, &meminfo);
 
+	LIST<PROCESS> process_list;
 	PROCESS* proc = new PROCESS();
 	printf("process=%08X\n", (uint32)proc);
-
+	process_list.push_back(proc);
+	
 	_enable();
 	panic("");
 	

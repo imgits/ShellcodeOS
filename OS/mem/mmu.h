@@ -1,6 +1,7 @@
 #pragma once
 #include "page_frame.h"
-
+#include <stdio.h>
+#include "kernel.h"
 
 #define  PAGE_DIR	_BASE		0xC0300000
 #define  PAGE_TABLE_BASE		0xC0000000
@@ -16,8 +17,6 @@ template <uint32 MMU_START_ADDRESS, uint32 MMU_MEM_SIZE, uint32 MMU_BLOCK_SIZE>
 class MMU
 {
 private:
-	//uint32 m_block_size;
-	//uint32 m_total_blocks;
 	uint32 m_next_free_block;
 	byte   m_block_map[MMU_TOTAL_BLOCKS];
 
@@ -35,7 +34,7 @@ private:
 				}
 				if (j = i + blocks)
 				{
-					return j;
+					return i;
 				}
 			}
 		}
@@ -56,8 +55,10 @@ public:
 		memset(m_block_map, 0, sizeof(m_block_map));
 	}
 
-	uint32		alloc_virtual_space(uint32 &size)
+	uint32		alloc_virtual_space(uint32 size)
 	{
+		CHECK_PAGE_ALGINED(size);
+
 		uint32 blocks = MMU_SIZE_TO_BLOCKS(size);
 
 		uint32 start_block = find_free_blocks(m_next_free_block, blocks);
@@ -75,12 +76,15 @@ public:
 		size = MMU_BLOCKS_TO_SIZE(blocks);
 		m_next_free_block = start_block + blocks;
 		uint32 virtual_address = MMU_START_ADDRESS + MMU_BLOCKS_TO_SIZE(start_block);
-		printf("alloc_virtual_space %08X %08X\n", virtual_address, size);
+		printf("alloc_virtual_space start_block = %08X %08X %08X\n", start_block, virtual_address, size);
 		return virtual_address;
 	}
 	
 	bool		free_virtual_space(uint32 start_address, uint32 size)
 	{
+		CHECK_PAGE_ALGINED(start_address);
+		CHECK_PAGE_ALGINED(size);
+
 		if (start_address < MMU_START_ADDRESS ||
 			(uint64)start_address + (uint64)size >= (uint64)MMU_START_ADDRESS + (uint64)MMU_MEM_SIZE )
 		{
@@ -104,6 +108,9 @@ public:
 
 	bool		reserve_virtual_space(uint32 start_address, uint32 size)
 	{
+		CHECK_PAGE_ALGINED(start_address);
+		CHECK_PAGE_ALGINED(size);
+
 		if (start_address < MMU_START_ADDRESS ||
 			(uint64)start_address + (uint64)size >= (uint64)MMU_START_ADDRESS + (uint64)MMU_MEM_SIZE)
 		{
@@ -128,6 +135,8 @@ public:
 
 	uint32		alloc_virtual_memory(uint32 size, uint32 protect = PT_PRESENT | PT_WRITABLE)
 	{
+		CHECK_PAGE_ALGINED(size);
+
 		uint32 virtual_addr = alloc_virtual_space(size);
 		if (virtual_addr == 0) return 0;
 		uint32 pages = size >> 12;
@@ -137,6 +146,9 @@ public:
 
 	bool		free_virtual_memory(uint32 start_address, uint32 size)
 	{
+		CHECK_PAGE_ALGINED(start_address);
+		CHECK_PAGE_ALGINED(size);
+
 		free_virtual_space(start_address, size);
 		PAGER::unmap_pages(start_address, size);
 		return true;
