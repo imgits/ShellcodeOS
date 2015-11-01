@@ -74,11 +74,14 @@ void main(uint32 kernel_image_size)
 
 	System.Init(kernel_image_size, &meminfo);
 
-	LIST<PROCESS> process_list;
+	LIST<PROCESS>* process_list = new LIST<PROCESS>();
 	PROCESS* proc = new PROCESS();
-	printf("process=%08X\n", (uint32)proc);
-	process_list.push_back(proc);
-	
+	printf("process_list=%08X process=%08X\n", process_list, (uint32)proc);
+	process_list->insert_head(proc);
+	process_list->remove_tail();
+	delete process_list;
+	delete proc;
+
 	_enable();
 	panic("");
 	

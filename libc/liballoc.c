@@ -108,6 +108,7 @@ static void* 	liballoc_memcpy(void* s1, const void* s2, size_t n)
 #ifdef DEBUG
 static void dump_array()
 {
+	return;
 	int i = 0;
 	struct boundary_tag *tag = NULL;
 
@@ -188,7 +189,6 @@ static inline struct boundary_tag* melt_left(struct boundary_tag *tag)
 	return left;
 }
 
-
 static inline struct boundary_tag* absorb_right(struct boundary_tag *tag)
 {
 	struct boundary_tag *right = tag->split_right;
@@ -230,12 +230,7 @@ static inline struct boundary_tag* split_tag(struct boundary_tag* tag)
 	return new_tag;
 }
 
-
 // ***************************************************************
-
-
-
-
 static struct boundary_tag* allocate_new_tag(unsigned int size)
 {
 	unsigned int pages;
@@ -277,8 +272,6 @@ static struct boundary_tag* allocate_new_tag(unsigned int size)
 
 	return tag;
 }
-
-
 
 void *malloc(size_t size)
 {
