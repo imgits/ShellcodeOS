@@ -8,6 +8,15 @@
 #include "vga.h"
 #include "ioport.h"
 
+uint16* VIDEO::m_video_buf = (uint16*)VGA_BUFFER_ADDRESS;
+uint32  VIDEO::m_cursor_x = 0;
+uint32  VIDEO::m_cursor_y = 0;
+uint16	VIDEO::m_fore_color = VGA_LIGHT_GRAY;
+uint16	VIDEO::m_back_color = VGA_BLACK;
+uint32	VIDEO::m_screen_width = VGA_WIDTH;
+uint32	VIDEO::m_screen_height = VGA_HEIGHT;
+
+
 void * video_frame_buf = (void*)VGA_BUFFER_ADDRESS;
 
 void init_vga(void* vga_buffer)

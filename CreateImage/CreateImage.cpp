@@ -55,10 +55,20 @@ struct MBR
 };
 
 #pragma pack(pop)
+
+void  __declspec(naked) INT_ENTRY()
+{
+	__asm cli
+	__asm push 0x12345678
+	__asm push 0x12345678
+	__asm push 0x12345678
+	__asm ret
+}
+
 //e:\shellcodeOS.vhd  bin\boot.bin bin\BootLdr.exe bin\OsLdr.exe l:\boot\OsLdr.exe bin\scOs.exe l:\os\ScOS.exe
 int _tmain(int argc, _TCHAR* argv[])
 {
-
+	//INT_ENTRY();
 #define  PML4_BASE  0xFFFFF6FB7DBED000
 #define  PDP_BASE   0xFFFFF6FB7DA00000
 #define  PD_BASE    0xFFFFF6FB40000000

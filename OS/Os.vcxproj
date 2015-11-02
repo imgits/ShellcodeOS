@@ -96,6 +96,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="int_handler.cpp" />
     <ClCompile Include="lock.cpp" />
     <ClCompile Include="mem\paging.cpp" />
     <ClCompile Include="process.cpp" />
@@ -132,6 +133,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./Release/callbios.obj</Outputs>
     </CustomBuild>
     <ClInclude Include="bios.h" />
+    <ClInclude Include="int_handler.h" />
     <ClInclude Include="lock.h" />
     <ClInclude Include="mem\paging.h" />
     <ClInclude Include="object.h" />
