@@ -130,3 +130,8 @@ int    __cdecl atexit(void(__cdecl *)(void))
 {
 	return 0;
 }
+
+int __cdecl _purecall()
+{
+	return 0;
+}

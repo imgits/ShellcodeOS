@@ -11,17 +11,17 @@
 #define GDT_USER_DATA		4
 #define GDT_KERNEL_FS		5
 #define GDT_USER_FS			6
-#define GDT_SYS_TSS		7
-#define GDT_TIB			8
+#define GDT_SYS_TSS			7
+#define GDT_TIB				8
 
-#define SEL_KERNEL_CODE	0x08
-#define SEL_KERNEL_DATA	0x10
+#define SEL_KERNEL_CODE		0x08
+#define SEL_KERNEL_DATA		0x10
 #define SEL_USER_CODE		0x18
 #define SEL_USER_DATA		0x20
 #define SEL_KERNEL_FS		0x28
-#define SEL_USER_FS		0x30
-#define SEL_SYS_TSS		0x38
-#define SEL_TIB			0x40
+#define SEL_USER_FS			0x30
+#define SEL_SYS_TSS			0x38
+#define SEL_TIB				0x40
 
 #define MAX_GDT_NUM		32
 
