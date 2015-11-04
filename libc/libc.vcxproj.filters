@@ -106,5 +106,8 @@
     <MASM Include="intrin.asm">
       <Filter>源文件</Filter>
     </MASM>
+    <MASM Include="aulldiv.asm">
+      <Filter>源文件</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

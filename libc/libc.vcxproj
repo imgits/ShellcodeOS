@@ -51,6 +51,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_X86_;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -116,6 +120,7 @@
     <ClInclude Include="vsprintf.h" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="aulldiv.asm" />
     <MASM Include="intrin.asm">
       <FileType>Document</FileType>
     </MASM>

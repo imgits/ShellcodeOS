@@ -3,14 +3,14 @@
 #include "stdio.h"
 
 #ifdef _DEBUG
-bool	read_sectors(void* sec_buf, uint32 first_sector, int total_secs)
-{
-	static FILE* fp_vhd = NULL;
-	if (fp_vhd == NULL) fp_vhd = fopen("e:\\ShellcodeOS.vhd", "rb");
-	fseek(fp_vhd, first_sector * 512, SEEK_SET);
-	int len = fread(sec_buf, 512, total_secs, fp_vhd);
-	return len == total_secs;
-}
+//bool	read_sectors(void* sec_buf, uint32 first_sector, int total_secs)
+//{
+//	static FILE* fp_vhd = NULL;
+//	if (fp_vhd == NULL) fp_vhd = fopen("e:\\ShellcodeOS.vhd", "rb");
+//	fseek(fp_vhd, first_sector * 512, SEEK_SET);
+//	int len = fread(sec_buf, 512, total_secs, fp_vhd);
+//	return len == total_secs;
+//}
 #else
 bool	 read_sectors(void* sec_buf, uint32 first_sector, int total_secs)
 {
