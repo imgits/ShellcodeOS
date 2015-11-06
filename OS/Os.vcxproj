@@ -47,7 +47,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -83,7 +82,7 @@
       <FixedBaseAddress>false</FixedBaseAddress>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalOptions> /filealign:0x1000  %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions> /filealign:0x1000 /INCREMENTAL:NO %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>../bin/scOS.exe</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\release;</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>

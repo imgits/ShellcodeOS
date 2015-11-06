@@ -19,9 +19,9 @@
 #define SEL_USER_CODE		0x18
 #define SEL_USER_DATA		0x20
 #define SEL_KERNEL_FS		0x28
-#define SEL_USER_FS		0x30
-#define SEL_SYS_TSS		0x38
-#define SEL_TIB			0x40
+#define SEL_USER_FS			0x30
+#define SEL_SYS_TSS			0x38
+#define SEL_TIB				0x40
 
 #define MAX_GDT_NUM		32
 
