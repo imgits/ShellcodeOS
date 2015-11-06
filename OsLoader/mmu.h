@@ -93,7 +93,7 @@ public:
 		__asm mov		eax, dword ptr[page_dir]
 		__asm mov		cr3, eax
 		__asm mov		eax, cr0
-		__asm or			eax, 0x80000000
+		__asm or		eax, 0x80000000
 		__asm mov		cr0, eax
 		printf("Entry page mode\n");
 	}
@@ -123,8 +123,7 @@ public:
 		for (uint32 i = 0; i < (MB(1)>>12); i++)
 		{
 			uint32 addr = i * PAGE_SIZE;
-			uint32 pt_index = PT_INDEX(addr);
-			page_table0[pt_index] = addr | PT_PRESENT | PT_WRITABLE;
+			page_table0[i] = addr | PT_PRESENT | PT_WRITABLE;
 		}
 		printf("map_low_1M_memory OK\n");
 		return true;

@@ -16,3 +16,30 @@ inline void* __cdecl operator new(size_t size, void* address)
 {
 	return address;
 }
+
+static int __cdecl _purecall()
+{
+	return 0;
+}
+
+//#include <typeinfo.h>
+
+// provide symbol:
+// type_info::'vftable' ["const type_info::`vftable'" (??_7type_info@@6B@)].
+// needed when compiling classes with virtual methods with /GR 
+class type_info
+{
+public:
+	//type_info(const type_info& rhs)
+	//{
+	//}
+
+	//type_info& operator=(const type_info& rhs)
+	//{
+	//	return *this;
+	//}
+
+	virtual ~type_info()
+	{
+	}
+};

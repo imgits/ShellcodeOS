@@ -47,6 +47,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -75,14 +76,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>oslibc.lib</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Native</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
       <BaseAddress>0x80000000</BaseAddress>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
       <FixedBaseAddress>false</FixedBaseAddress>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalOptions> /filealign:0x1000 /INCREMENTAL:NO %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions> /filealign:0x1000  %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>../bin/scOS.exe</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\release;</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>

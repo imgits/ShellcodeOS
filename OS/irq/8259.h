@@ -8,6 +8,9 @@
 #define	PIC1_INT0				0x20
 #define	PIC2_INT0				0x28
 
+#define PIC_INT_FIRST			0x20
+#define PIC_INT_LAST			0x2F
+
 #define PIC1_CMD_PORT			0x20
 #define PIC1_DATA_PORT			0x21
 

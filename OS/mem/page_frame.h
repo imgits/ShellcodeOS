@@ -31,18 +31,17 @@ struct memory_info;
 class PAGE_FRAME_DB
 {
 private:
-	static byte*		m_page_frame_database;
-	static bool      m_database_usable;
+	static byte*	m_page_frame_database;
+	static bool     m_database_usable;
 	static uint32	m_page_frame_min;
 	static uint32	m_page_frame_max;
 	static uint32	m_next_free_page_frame;
 private:
-	static uint32    map_mem_space(memory_info* meminfo);
+	static uint32   map_mem_space(memory_info* meminfo);
 public:
 	static bool		Init(uint32 page_frame_used, memory_info* meminfo);
 	static uint32	alloc_physical_page();
 	static uint32	alloc_physical_pages(uint32 pages);
 	static void		free_physical_page(uint32 page);
 	static void		free_physical_pages(uint32  start_page, uint32 pages);
-
 };

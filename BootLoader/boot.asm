@@ -7,7 +7,7 @@
 %define  BOOT_LOADER_SEGMENT				(BOOT_LOADER_ADDRESS>>4)    ;常数，内核加载的起始内存段地址 
 %define  BOOT_LOADER_OFFSET					(BOOT_LOADER_ADDRESS&0xffff);常数，内核加载的起始内存段偏移 
 
-%define  BOOT_LOADER_STACK				0x00090000
+%define  BOOT_LOADER_STACK					0x00090000
 
 ; 0x00100000 +--------------------+
 ;            |      ROM           |

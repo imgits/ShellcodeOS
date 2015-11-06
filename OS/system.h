@@ -29,6 +29,8 @@ private:
 	GDT    m_gdt;
 	IDT    m_idt;
 	TSS    m_tss;
+	RTC    m_rtc;
+
 	PROCESS m_kproc;
 public:
 	uint32				m_cpu_count;

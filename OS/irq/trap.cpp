@@ -281,7 +281,7 @@ void TRAP::handler14(TRAP_CONTEXT* context)
 
 		//printf("int_no=%d errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", context->int_no, context->err_code, virt_addr, context->cs, context->eip);
 		//Pager::set_mem_attribute(virt_addr & 0xFFFFF000, PAGE_SIZE, PAGE_ATTR_PRESENT | PAGE_ATTR_WRITE | PAGE_ATTR_USER);
-		context->eflags |= EFLAGS_TF;
+		//context->eflags |= EFLAGS_TF;
 		//__asm hlt
 }
 //15(0x0F) ÒòÌØ¶û±£Áô
