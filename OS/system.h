@@ -13,6 +13,7 @@
 #include "kernel.h"
 #include "bios.h"
 #include "process.h"
+#include "paging.h"
 
 #define MAX_CPU_NUM					32
 

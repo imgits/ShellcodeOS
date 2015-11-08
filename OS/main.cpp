@@ -21,6 +21,7 @@
 #include "bios.h"
 #include "system.h"
 #include "liballoc.h"
+#include "paging.h"
 
 CPU			  cpu;
 
@@ -67,6 +68,8 @@ void main(uint32 kernel_image_size)
 	CppInit();
 	//callbios 要求内存地址位于1M一下，
 	//因此，此处从栈(esp<0x00090000)中分配meminfo
+	PAGER::Init(kernel_image_size);
+	panic("");
 	memory_info meminfo;
 	uint32 memsize = get_mem_info(meminfo);
 

@@ -69,6 +69,9 @@
     <ClCompile Include="disk.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pe_file.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vsprintf.h">
@@ -99,6 +102,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="list.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_file.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

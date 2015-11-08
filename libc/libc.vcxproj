@@ -72,6 +72,7 @@
       <DisableSpecificWarnings>4273</DisableSpecificWarnings>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -102,6 +103,7 @@
     <ClCompile Include="isxdigit.c" />
     <ClCompile Include="liballoc.c" />
     <ClCompile Include="pe.cpp" />
+    <ClCompile Include="pe_file.cpp" />
     <ClCompile Include="string.c" />
     <ClCompile Include="vga.cpp" />
     <ClCompile Include="vsprintf.c" />
@@ -114,6 +116,7 @@
     <ClInclude Include="liballoc.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="pe.h" />
+    <ClInclude Include="pe_file.h" />
     <ClInclude Include="stdio.h" />
     <ClInclude Include="vga.h" />
     <ClInclude Include="vsprintf.h" />

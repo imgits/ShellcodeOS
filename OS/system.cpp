@@ -22,7 +22,6 @@ bool SYSTEM::Init(uint32 kernel_image_size, memory_info* meminfo)
 	TRAP::Init(&m_idt);
 	PIC::Init(&m_idt);
 	PIT::Init();
-	//RTC::Init();
 	m_rtc.Init(&m_idt);
 
 	KBD::Init();

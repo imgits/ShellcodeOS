@@ -11,18 +11,6 @@
 #define MAX_MEM_MAP		32
 
 #pragma pack(push,1)
-struct  memory_map
-{
-	uint64 base_addr;
-	uint64 length;
-	uint32 type;
-};
-struct memory_info
-{
-	uint32	  map_count;
-	memory_map mem_maps[MAX_MEM_MAP];
-};
-
 struct  regs_t
 {
 	unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
