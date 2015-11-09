@@ -3,12 +3,20 @@
 
 #define   PAGE_SIZE						0x1000
 #define   PAGE_SIZE_BITS					12
-#define   PD_INDEX(virtual_addr)			((virtual_addr>>22))
-#define   PT_INDEX(virtual_addr)			((virtual_addr>>12)&0x3FF)
+
+#define   PDE_INDEX(virtual_addr)			((virtual_addr>>22))
+#define   PTE_INDEX(virtual_addr)			((virtual_addr>>12)&0x3FF)
+
+#define   PDE_ADDRESS(pde)					((pde)&0xFFFFF000)
+#define   PDE_ATTR(pde)						((pde)&0x00000FFF)
+
+#define   PTE_ADDRESS(pte)					((pte)&0xFFFFF000)
+#define   PTE_ATTR(pte)						((pte)&0x00000FFF)
+
 
 #define   KERNEL_BASE						0x80000000
 #define   PAGE_TABLE_BASE					0xC0000000
-#define   PAGE_DIR_BASE					0xC0300000 //=(0xC0000000 + (0xC0000000>>12))
+#define   PAGE_DIR_BASE						0xC0300000 //=(0xC0000000 + (0xC0000000>>12))
 #define   PT_BASE(virtual_addr)			(PAGE_TABLE_BASE + PD_INDEX(virtual_addr)* PAGE_SIZE)
 #define   PTE(virtual_addr)			    (PAGE_TABLE_BASE + (virtual_addr>>12))
 #define   PAGE_TMP_BASE                  0x80000000
@@ -18,10 +26,10 @@
 #define     GET_PAGE_TABLE(addr)  (PAGE_TABLE_BASE + ((uint32)(addr)>>22)* PAGE_SIZE)
 
 #define     SET_PDE(addr, val)  ((uint32*)PAGE_DIR_BASE)[(uint32)(addr)>>22] = val;
-#define     SET_PTE(addr, val)  ((uint32*)PAGE_TABLE_BASE)[(uint32)(addr)>>12]=val;
+#define     SET_PTE(addr, val)  {((uint32*)PAGE_TABLE_BASE)[(uint32)(addr)>>12]=val; __asm  invlpg addr } 
 
 
-#define     MAP_PAGE(page_pa,page_va) ((uint32*)PAGE_TABLE_BASE)[(uint32)(page_va)>>12] = page_pa | PT_PRESENT | PT_WRITABLE;
+#define     MAP_PAGE(page_pa,page_va) { ((uint32*)PAGE_TABLE_BASE)[(uint32)(page_va)>>12] = page_pa | PT_PRESENT | PT_WRITABLE; __asm  invlpg page_va } 
 #define     MAP_PAGE_TABLE(page_dir, pt_pa,pt_va) ((uint32*)page_dir)[((uint32)(pt_va)>>12)&0x3FF] = pt_pa | PT_PRESENT | PT_WRITABLE;
 
 #define     PAGE_ALGINED(addr)		((((uint32)addr) & 0x00000FFF) ==0)  	

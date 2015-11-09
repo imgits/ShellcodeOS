@@ -30,18 +30,75 @@ PAGER::PAGER()
 
 bool	PAGER::Init(uint32 kernel_image_size)
 {
-	printf("os_page_dir=%08X\n", tmp_page_dir);
-	//panic("");
 	m_kernel_image_size = kernel_image_size;
 	m_ram_size = get_mem_info();
-	m_page_frame_min = PAGES_TO_SIZE(MB(4) + kernel_image_size);
-	m_page_frame_max = PAGES_TO_SIZE(m_ram_size);
-
+	printf("RAM size=%08X(%dMB)\n", m_ram_size, m_ram_size >> 20);
+	m_page_frame_min = SIZE_TO_PAGES(KERNEL_START_PA + kernel_image_size);
+	m_page_frame_max = SIZE_TO_PAGES(m_ram_size);
 	m_database_usable = false;
+	
+	printf("kernel_image_size=%08X, m_page_frame_min=%08X m_page_frame_max=%08X\n", kernel_image_size, m_page_frame_min, m_page_frame_max);
+
 	rebuild_os_page_table(kernel_image_size);
+	
+	//分配page_frame_database空间(1M)
+	byte page_frame_db = alloc_physical_pages(SIZE_TO_PAGES(MB(1)));
+	map_pages(page_frame_db, PAGE_FRAME_BASE, MB(1));
+	m_database_usable = true;
+
+	panic("rebuild_os_page_table OK\n");
 
 	return true;
 }
+
+void PAGER::rebuild_os_page_table(int kernel_image_size)
+{
+	/*
+	在此函数开发中遇到的问题:
+	临时映射2个页表页面时，使用的是同一虚拟地址空间(tmp_page_table),
+	由于更新隐射关系后没有刷新TLB(在MAP_PAGE中没有__asm  invlpg page_va指令),
+	致使前面的数据被后面的数据所覆盖，从而到时重新设置CR3运行失败。后来在
+	MAP_PAGE中添加__asm  invlpg page_va指令，问题解决，教训十分深刻
+	*/
+
+	//建立自映射野目录
+	uint32 new_page_dir = alloc_physical_page();
+	MAP_PAGE(new_page_dir, tmp_page_dir);
+	memset(tmp_page_dir, 0, PAGE_SIZE);
+	tmp_page_dir[PDE_INDEX(PAGE_TABLE_BASE)] = new_page_dir | PT_PRESENT | PT_WRITABLE;
+	
+	//映射0-1M内存空间
+	uint32 new_page_table = alloc_physical_page();
+	MAP_PAGE(new_page_table, tmp_page_table);
+	memset(tmp_page_table, 0, PAGE_SIZE);
+
+	uint32 virtual_address = 0;
+	tmp_page_dir[PDE_INDEX(virtual_address)] = new_page_table | PT_PRESENT | PT_WRITABLE;
+	for (int i = 0; i < MB(1) / PAGE_SIZE; i++, virtual_address += PAGE_SIZE)
+	{
+		tmp_page_table[i] = virtual_address | PT_PRESENT | PT_WRITABLE;
+	}
+
+	//映射内核空间(假设kernel_image_size<=4M)
+	new_page_table = alloc_physical_page();
+	MAP_PAGE(new_page_table, tmp_page_table);
+	memset(tmp_page_table, 0, PAGE_SIZE);
+
+	virtual_address = KERNEL_BASE;
+	tmp_page_dir[PDE_INDEX(virtual_address)] = new_page_table | PT_PRESENT | PT_WRITABLE;
+
+	uint32 physcial_address = KERNEL_START_PA;
+	uint32 kernel_pages = SIZE_TO_PAGES(kernel_image_size);
+	for (int i = 0; i < kernel_pages; i++, virtual_address += PAGE_SIZE, physcial_address += PAGE_SIZE)
+	{
+		tmp_page_table[PTE_INDEX(virtual_address)] = physcial_address | PT_PRESENT | PT_WRITABLE;
+	}
+
+	__asm cli
+	__asm mov eax, new_page_dir
+	__asm mov CR3, eax
+}
+
 
 uint32 PAGER::map_mem_space(memory_info* meminfo)
 {
@@ -223,18 +280,10 @@ uint32 PAGER::new_page_table(uint32 virtual_address)
 	return page_table_VA;
 }
 
-uint32 PAGER::map_pages(uint32 physical_addr, uint32 virtual_addr, int size, int protect)
+uint32 PAGER::map_pages(uint32 physical_address, uint32 virtual_address, int size, int protect)
 {
-	CHECK_PAGE_ALGINED(physical_addr);
-	CHECK_PAGE_ALGINED(virtual_addr);
-	CHECK_PAGE_ALGINED(size);
-
-	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
-	if (USER_SPACE(virtual_addr)) protect |= PT_USER;
-	
-	uint32 virtual_address = virtual_addr & 0xfffff000;
-	uint32 physical_address = physical_addr & 0xfffff000;
-	uint32 pages = ((virtual_addr - virtual_address) + size + PAGE_SIZE - 1) >> 12;
+	if (USER_SPACE(virtual_address)) protect |= PT_USER;
+	uint32 pages = SIZE_TO_PAGES(size);
 
 	for (uint32 i = 0; i < pages; i++)
 	{
@@ -246,28 +295,22 @@ uint32 PAGER::map_pages(uint32 physical_addr, uint32 virtual_addr, int size, int
 	return virtual_address;
 }
 
-void PAGER::unmap_pages(uint32 virtual_addr, int size)
+void PAGER::unmap_pages(uint32 virtual_address, int size)
 {
-	CHECK_PAGE_ALGINED(virtual_addr);
-	CHECK_PAGE_ALGINED(size);
-
-	uint32* page_dir = (uint32*)PAGE_DIR_BASE;
-
-	uint32 virtual_address = virtual_addr & 0xfffff000;
-	uint32 pages = ((virtual_addr - virtual_address) + size + PAGE_SIZE - 1) >> 12;
+	uint32 pages = SIZE_TO_PAGES(size);
 
 	for (uint32 i = 0; i < pages; i++)
 	{
 		uint32 va = virtual_address + i * PAGE_SIZE;
-		uint32 pd_index = PD_INDEX(va);
-		uint32 pt_index = PT_INDEX(va);
+		uint32 pd_index = PDE_INDEX(va);
+		uint32 pt_index = PTE_INDEX(va);
 		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-		if (page_dir[pd_index] != 0)
+		uint32 pde = GET_PDE(va);
+		if (pde != 0)
 		{
-			uint32 page = page_table_VA[pt_index] >> 12;
-			page_table_VA[pt_index] = 0;
-			__asm { invlpg va } //无效TLB
-			PAGE_FRAME_DB::free_physical_page(page);
+			uint32 page = GET_PTE(va)>>12;
+			SET_PTE(va, 0);
+			free_physical_page(page);
 		}
 	}
 }
@@ -281,61 +324,7 @@ uint32 PAGER::new_page_table(uint32* page_dir, uint32 virtual_address)
 	return page_table_PA;
 }
 
-void PAGER::rebuild_os_page_table(int kernel_image_size)
-{
-	uint32 pages = SIZE_TO_PAGES(kernel_image_size);
-	
-	//建立自映射野目录
-	uint32 new_page_dir  = alloc_physical_page();
 
-	printf("tmp_page_dir=%08X\n", tmp_page_dir);
-	printf("PDE(%08X)=%08X\n", tmp_page_dir, GET_PDE(tmp_page_dir));
-	panic("");
-	panic("PDE(%08X)=%08X\n", tmp_page_dir, GET_PDE(tmp_page_dir));
-	panic(" PTE(%08X)=%08X\n", tmp_page_dir, GET_PTE(tmp_page_dir));
-	
-	MAP_PAGE(new_page_dir, tmp_page_dir);
-	panic("");
-	memset(tmp_page_dir, 0, PAGE_SIZE);
-	tmp_page_dir[PAGE_TABLE_BASE>>22] =new_page_dir | PT_PRESENT | PT_WRITABLE;
-	panic("");
-
-	//uint32* os_page_dir = os_pager.new_page_dir();
-
-	//映射0-4M内存空间
-	uint32 new_page_table = alloc_physical_page();
-	MAP_PAGE(new_page_table, tmp_page_table);
-	memset(tmp_page_table, 0, PAGE_SIZE);
-	tmp_page_dir[0] = new_page_table | PT_PRESENT | PT_WRITABLE;
-	
-	uint32 virtual_address = 0;
-	for (int i = 0; i < 1024; i++, virtual_address += PAGE_SIZE)
-	{
-		tmp_page_table[i] = virtual_address | PT_PRESENT | PT_WRITABLE;
-	}
-
-	//映射内核空间(假设kernel_image_size<=4M)
-	new_page_table = alloc_physical_page();
-	MAP_PAGE(new_page_table, tmp_page_table);
-	memset(tmp_page_table, 0, PAGE_SIZE);
-	tmp_page_dir[virtual_address >> 22] = new_page_table | PT_PRESENT | PT_WRITABLE;
-
-	virtual_address = KERNEL_BASE;
-	for (int i = 0; i < pages; i++, virtual_address+=PAGE_SIZE)
-	{
-		tmp_page_table[(virtual_address >> 12) & 0x3FF] = GET_PTE(virtual_address);
-	}
-
-	//分配page_frame_database空间(1M)
-	byte page_frame_db = alloc_physical_pages(SIZE_TO_PAGES(MB(1)));
-	map_pages(page_frame_db, PAGE_FRAME_BASE, MB(1));
-	
-	__asm mov eax, new_page_dir
-	__asm mov CR3, eax
-
-	m_database_usable = false;
-
-}
 
 uint32 PAGER::map_pages(uint32* page_dir, uint32 physical_address, uint32 virtual_address, int size, int protect)
 {

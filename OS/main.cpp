@@ -62,20 +62,25 @@ uint32 get_mem_info(memory_info& meminfo)
 
 void main(uint32 kernel_image_size)
 {
+	PAGER::Init(kernel_image_size);
+	panic("");
+
 	puts("\nHello world\n", 30);
 	puts("Shellcode OS is starting...\n", 30);
 
 	CppInit();
+
 	//callbios 要求内存地址位于1M一下，
 	//因此，此处从栈(esp<0x00090000)中分配meminfo
-	PAGER::Init(kernel_image_size);
-	panic("");
+
 	memory_info meminfo;
 	uint32 memsize = get_mem_info(meminfo);
 
 	printf("memsize=%08X(%dMb)\n", memsize, memsize >> 20);
 
 	System.Init(kernel_image_size, &meminfo);
+
+	
 
 	LIST<PROCESS>* process_list = new LIST<PROCESS>();
 	PROCESS* proc = new PROCESS();

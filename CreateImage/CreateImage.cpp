@@ -90,39 +90,45 @@ int _tmain(int argc, _TCHAR* argv[])
 	MBR  vhd_mbr;
 	int len;
 	char boot_loader[1024 * 64];
-	FILE* fvhd = fopen(argv[1], "rb+");
-	len = fread(&vhd_mbr, 1, 512, fvhd);
-	int mbr_size = load_file(argv[2], &boot_mbr, sizeof(MBR));
-	int bootldr_size = load_file(argv[3], boot_loader, sizeof(boot_loader));
-	int bootldr_sectors = (bootldr_size + 511) / 512;
-	boot_mbr.Disk_Address_Packet.bootldr_sectors = bootldr_sectors;
-	memcpy(boot_mbr.partition_table, vhd_mbr.partition_table, 16*4);
-
-	PIMAGE_DOS_HEADER dos_hdr = (PIMAGE_DOS_HEADER)boot_loader;
-	PIMAGE_NT_HEADERS pe_hdr = (PIMAGE_NT_HEADERS)(boot_loader + dos_hdr->e_lfanew);
-	uint32_t EntryPoint = pe_hdr->OptionalHeader.ImageBase + pe_hdr->OptionalHeader.AddressOfEntryPoint;
-	boot_mbr.boot_loader_main = EntryPoint;
-
-	rewind(fvhd);
-	len = fwrite(&boot_mbr, 1, 512, fvhd);
-	len = fwrite(&boot_loader, 512, bootldr_sectors, fvhd);
-	fclose(fvhd);
-
-	char VolumeMountPoint[5] = "c:\\";
-	VolumeMountPoint[0] = argv[5][0];
-	if (vhd.Open(argv[1]) &&
-		vhd.Attach())
+	try
 	{
-		Sleep(100);
-		BOOL ret = CopyFile(argv[4], argv[5], false);
-		if (ret)
+		FILE* fvhd = fopen(argv[1], "rb+");
+		len = fread(&vhd_mbr, 1, 512, fvhd);
+		int mbr_size = load_file(argv[2], &boot_mbr, sizeof(MBR));
+		int bootldr_size = load_file(argv[3], boot_loader, sizeof(boot_loader));
+		int bootldr_sectors = (bootldr_size + 511) / 512;
+		boot_mbr.Disk_Address_Packet.bootldr_sectors = bootldr_sectors;
+		memcpy(boot_mbr.partition_table, vhd_mbr.partition_table, 16 * 4);
+
+		PIMAGE_DOS_HEADER dos_hdr = (PIMAGE_DOS_HEADER)boot_loader;
+		PIMAGE_NT_HEADERS pe_hdr = (PIMAGE_NT_HEADERS)(boot_loader + dos_hdr->e_lfanew);
+		uint32_t EntryPoint = pe_hdr->OptionalHeader.ImageBase + pe_hdr->OptionalHeader.AddressOfEntryPoint;
+		boot_mbr.boot_loader_main = EntryPoint;
+
+		rewind(fvhd);
+		len = fwrite(&boot_mbr, 1, 512, fvhd);
+		len = fwrite(&boot_loader, 512, bootldr_sectors, fvhd);
+		fclose(fvhd);
+
+		char VolumeMountPoint[5] = "c:\\";
+		VolumeMountPoint[0] = argv[5][0];
+		if (vhd.Open(argv[1]) &&
+			vhd.Attach())
 		{
-			ret = CopyFile(argv[6], argv[7], false);
-			if (ret) 
-				return 0;
+			Sleep(100);
+			BOOL ret = CopyFile(argv[4], argv[5], false);
+			if (ret)
+			{
+				ret = CopyFile(argv[6], argv[7], false);
+				if (ret)
+					return 0;
+			}
 		}
 	}
-
+	catch (...)
+	{
+		printf("Create image failed\n");
+	}
 	return 0;
 }
 

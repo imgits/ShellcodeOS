@@ -7,8 +7,10 @@
 #include "../Os/kernel.h"
 
 #define   PAGE_SIZE							0x1000
-#define   PD_INDEX(virtual_addr)			((virtual_addr)>>22)
-#define   PT_INDEX(virtual_addr)			(((virtual_addr)>>12)&0x3FF)
+#define   PDE_INDEX(virtual_addr)			((virtual_addr)>>22)
+#define   PTE_INDEX(virtual_addr)			(((virtual_addr)>>12)&0x3FF)
+#define   PDE_ADDRESS(pde)					((pde)&0xFFFFF000)
+#define   PDE_ATTR(pde)						((pde)&0x00000FFF)
 
 #define		PT_PRESENT   0x001
 #define		PT_WRITABLE  0x002
@@ -23,11 +25,12 @@
 #define     PT_LOW1M_PA   			0x00031000
 #define     PT_KERNEL_PA   			0x00032000
 
+#if 0
 //将物理内存映射到虚拟地址空间
 //页面大小为4K，内存按照4M边界对齐
 static void    map_4K_pages(uint32* page_dir, uint32* page_table, uint32 physcail_address, uint32 virtual_address, uint32 size)
 {
-	page_dir[PD_INDEX(virtual_address)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+	page_dir[PDE_INDEX(virtual_address)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
 	uint32 pages = size >> 12;
 	for (int i = 0; i < pages; i++)
 	{
@@ -44,7 +47,23 @@ static void    map_4M_pages(uint32* page_dir, uint32 physcail_address, uint32 vi
 	{
 		uint32 pa = physcail_address + i*MB(4);
 		uint32 va = virtual_address + i*MB(4);
-		page_dir[PD_INDEX(va)] = pa | PT_PRESENT | PT_WRITABLE | PT_4M;
+		page_dir[PDE_INDEX(va)] = pa | PT_PRESENT | PT_WRITABLE | PT_4M;
+	}
+}
+#endif
+
+//在以4M为边界的4M范围内映射内存地址空间
+static void    map_pages_within_4M(uint32* page_dir, uint32* page_table, uint32 physcail_address, uint32 virtual_address, uint32 size)
+{
+	memset(page_table, 0, PAGE_SIZE);
+	page_dir[PDE_INDEX(virtual_address)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+
+	uint32 pages = size >> 12;
+	uint32 pt_index = PTE_INDEX(virtual_address);
+	for (int i = pt_index; i < pt_index + pages; i++)
+	{
+		uint32 pa = physcail_address + i*PAGE_SIZE;
+		page_table[i] = pa | PT_PRESENT | PT_WRITABLE;
 	}
 }
 
@@ -54,36 +73,14 @@ static void	startup_page_mode()
 	memset(page_dir, 0, PAGE_SIZE);
 	
 	//页目录自映射
-	page_dir[PD_INDEX(PAGE_TABLE_BASE)] = (uint32)page_dir | PT_PRESENT | PT_WRITABLE;
+	page_dir[PDE_INDEX(PAGE_TABLE_BASE)] = (uint32)page_dir | PT_PRESENT | PT_WRITABLE;
 	
-	//映射00000000-00400000 4M
-	page_dir[PD_INDEX(0x00000000)] = PT_LOW1M_PA | PT_PRESENT | PT_WRITABLE;
-	uint32* page_table = (uint32*)PT_LOW1M_PA;
-	memset(page_table, 0, PAGE_SIZE);
-	uint32 pages = MB(1) >> 12;
-	uint32 pa_base = 0;
-	for (int i = 0; i < pages; i++)
-	{
-		uint32 pa = pa_base + i*PAGE_SIZE;
-		page_table[i] = pa | PT_PRESENT | PT_WRITABLE;
-	}
+	//映射物理内存00000000-000FFFFF至虚拟地址空间00000000-000FFFFF
+	map_pages_within_4M(page_dir, (uint32*)PT_LOW1M_PA, 0, 0, MB(1));
 
-	page_dir[PD_INDEX(KERNEL_BASE)] = PT_KERNEL_PA | PT_PRESENT | PT_WRITABLE;
-	page_table = (uint32*)PT_KERNEL_PA;
-	memset(page_table, 0, PAGE_SIZE);
-	pages = MB(4) >> 12;
-	pa_base = MB(1);
-	for (int i = 0; i < pages; i++)
-	{
-		uint32 pa = pa_base + i*PAGE_SIZE;
-		page_table[i] = pa | PT_PRESENT | PT_WRITABLE;
-	}
-
-	//map_4K_pages(page_dir, (uint32*)PT_LOW1M_PA, 0x00000000, 0x00000000, MB(4));
-	//map_4K_pages(page_dir, (uint32*)PT_KERNEL_PA, 0x00400000, 0x80000000, MB(16));
-
-	//map_4M_pages(page_dir, 0x00000000, 0x00000000, MB(4));
-	//map_4M_pages(page_dir, 0x00400000, 0x80000000, MB(16));
+	//映射物理内存00100000-004FFFFF至虚拟地址空间80000000-803FFFFF
+	//OsLoader假定OS kernel大小超过4M
+	map_pages_within_4M(page_dir, (uint32*)PT_KERNEL_PA, KERNEL_START_PA, KERNEL_BASE, MB(4));
 
 	__asm mov		eax, dword ptr[page_dir]
 	__asm mov		cr3, eax

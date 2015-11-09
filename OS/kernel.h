@@ -4,6 +4,8 @@
 
 #define panic(fmt,...) { printf("%s::%s() line %d:"#fmt,__FILE__,__FUNCTION__,__LINE__, __VA_ARGS__); __asm jmp $}
 
+#define   KERNEL_START_PA					0x00100000
+
 #define   KERNEL_BASE						0x80000000 //~0xBFFFFFFF
 #define   PAGE_TABLE_BASE					0xC0000000 //~0xC03FFFFF
 #define   PAGE_DIR_BASE						0xC0300000 // (0xC0000000 + (0xC0000000>>12))
