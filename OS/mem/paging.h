@@ -76,12 +76,6 @@ private:
 public:
 	PAGER();
 	static bool	Init(uint32 kernel_image_size);
-
-private:
-	static uint32   get_mem_info();
-	static uint32   map_mem_space(memory_info* meminfo);
-
-public:
 	static uint32	alloc_physical_page();
 	static uint32	alloc_physical_pages(uint32 pages);
 	static void		free_physical_page(uint32 page);
@@ -94,8 +88,12 @@ public:
 
 	static uint32 new_page_table(uint32* page_dir, uint32 virtual_address);
 	static uint32 map_pages(uint32* page_dir, uint32 physical_address, uint32 virtual_address, int size, int protect = (PT_PRESENT | PT_WRITABLE));
-	static void   unmap_pages(uint32* page_dir, uint32 virtual_address, int size);
 
-	static void	  rebuild_os_page_table(int kernel_image_size);
+private:
+	static uint32   get_mem_info();
+	static void		create_page_frame_db();
+	static void		rebuild_os_page_table();
 };
+
+	
 

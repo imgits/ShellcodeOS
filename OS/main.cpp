@@ -62,13 +62,14 @@ uint32 get_mem_info(memory_info& meminfo)
 
 void main(uint32 kernel_image_size)
 {
-	PAGER::Init(kernel_image_size);
-	panic("");
-
 	puts("\nHello world\n", 30);
 	puts("Shellcode OS is starting...\n", 30);
 
+	PAGER::Init(kernel_image_size);
+
 	CppInit();
+
+	panic("");
 
 	//callbios 要求内存地址位于1M一下，
 	//因此，此处从栈(esp<0x00090000)中分配meminfo

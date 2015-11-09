@@ -37,21 +37,13 @@ bool	PAGER::Init(uint32 kernel_image_size)
 	m_page_frame_max = SIZE_TO_PAGES(m_ram_size);
 	m_database_usable = false;
 	
-	printf("kernel_image_size=%08X, m_page_frame_min=%08X m_page_frame_max=%08X\n", kernel_image_size, m_page_frame_min, m_page_frame_max);
-
-	rebuild_os_page_table(kernel_image_size);
-	
-	//分配page_frame_database空间(1M)
-	byte page_frame_db = alloc_physical_pages(SIZE_TO_PAGES(MB(1)));
-	map_pages(page_frame_db, PAGE_FRAME_BASE, MB(1));
-	m_database_usable = true;
-
-	panic("rebuild_os_page_table OK\n");
+	rebuild_os_page_table();
+	create_page_frame_db();
 
 	return true;
 }
 
-void PAGER::rebuild_os_page_table(int kernel_image_size)
+void PAGER::rebuild_os_page_table()
 {
 	/*
 	在此函数开发中遇到的问题:
@@ -88,7 +80,7 @@ void PAGER::rebuild_os_page_table(int kernel_image_size)
 	tmp_page_dir[PDE_INDEX(virtual_address)] = new_page_table | PT_PRESENT | PT_WRITABLE;
 
 	uint32 physcial_address = KERNEL_START_PA;
-	uint32 kernel_pages = SIZE_TO_PAGES(kernel_image_size);
+	uint32 kernel_pages = SIZE_TO_PAGES(m_kernel_image_size);
 	for (int i = 0; i < kernel_pages; i++, virtual_address += PAGE_SIZE, physcial_address += PAGE_SIZE)
 	{
 		tmp_page_table[PTE_INDEX(virtual_address)] = physcial_address | PT_PRESENT | PT_WRITABLE;
@@ -99,9 +91,16 @@ void PAGER::rebuild_os_page_table(int kernel_image_size)
 	__asm mov CR3, eax
 }
 
-
-uint32 PAGER::map_mem_space(memory_info* meminfo)
+void PAGER::create_page_frame_db()
 {
+	//分配page_frame_database空间(1M)
+	uint32 page_frame_db_VA = alloc_physical_pages(SIZE_TO_PAGES(MB(1)));
+	map_pages(page_frame_db_VA, PAGE_FRAME_BASE, MB(1));
+
+	m_page_frame_database = (byte*)PAGE_FRAME_BASE;
+	memset(m_page_frame_database, PAGE_FRAME_NONE, MB(1));
+	
+	memory_info* meminfo = &m_meminfo;
 	uint64 memsize = 0;
 	for (int i = 0; i < meminfo->map_count;i++)
 	{
@@ -142,7 +141,7 @@ uint32 PAGER::map_mem_space(memory_info* meminfo)
 			break;
 		}
 	}
-	return SIZE_TO_PAGES(memsize);
+	m_database_usable = true;
 }
 
 uint32 PAGER::alloc_physical_page()
