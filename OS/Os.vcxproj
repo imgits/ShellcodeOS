@@ -47,6 +47,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>arch;mem;timer;irq;../libc;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -63,7 +65,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>.;arch;timer;irq;mem;../libc;</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <PreprocessorDefinitions>USE_DL_PREFIX;_X86_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_X86_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <AdditionalOptions>/Gs32768 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4391</DisableSpecificWarnings>
@@ -96,8 +98,10 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="int_handler.cpp" />
+    <ClCompile Include="device.cpp" />
+    <ClCompile Include="irq\int_handler.cpp" />
     <ClCompile Include="lock.cpp" />
+    <ClCompile Include="mem\malloc.cpp" />
     <ClCompile Include="mem\paging.cpp" />
     <ClCompile Include="process.cpp" />
     <ClCompile Include="syscall.cpp" />
@@ -113,9 +117,8 @@
     <ClCompile Include="arch\idt.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="main.cpp" />
-    <None Include="malloc.c" />
+    <None Include="dlmalloc.c" />
     <ClCompile Include="mem\mmu.cpp" />
-    <ClCompile Include="mem\page_frame.cpp" />
     <ClCompile Include="pci.cpp" />
     <ClCompile Include="irq\8259.cpp" />
     <ClCompile Include="arch\tss.cpp" />
@@ -133,8 +136,10 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">./Release/callbios.obj</Outputs>
     </CustomBuild>
     <ClInclude Include="bios.h" />
-    <ClInclude Include="int_handler.h" />
+    <ClInclude Include="device.h" />
+    <ClInclude Include="irq\int_handler.h" />
     <ClInclude Include="lock.h" />
+    <ClInclude Include="mem\malloc.h" />
     <ClInclude Include="mem\paging.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="process.h" />
@@ -152,7 +157,6 @@
     <ClInclude Include="kernel.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="mem\mmu.h" />
-    <ClInclude Include="mem\page_frame.h" />
     <ClInclude Include="pci.h" />
     <ClInclude Include="irq\8259.h" />
     <ClInclude Include="arch\tss.h" />

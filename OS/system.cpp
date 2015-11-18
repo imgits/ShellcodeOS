@@ -1,6 +1,5 @@
 #include "system.h"
 #include <string.h>
-#include "page_frame.h"
 #include "trap.h"
 //#include "bios.h"
 
@@ -16,38 +15,65 @@ SYSTEM::~SYSTEM()
 
 bool SYSTEM::Init(uint32 kernel_image_size, memory_info* meminfo)
 {
+	PAGER::Init(kernel_image_size);
 	m_gdt.Init();
 	m_idt.Init();
 	m_tss.Init(&m_gdt);
 	TRAP::Init(&m_idt);
 	PIC::Init(&m_idt);
 	PIT::Init();
-	m_rtc.Init(&m_idt);
+	RTC::Init(&m_idt);
 
 	KBD::Init();
 
 	m_kernel_image_size = kernel_image_size;
 	memcpy(&m_meminfo, meminfo, sizeof(memory_info));
 	init_kernel_mmu();
+	alloc_stack();
+
+	m_pci.scan_devices();
+
+	//m_disk.Init(true, true);
+	//m_disk.detect_device_type();
+
+	//m_disk.Init(true, false);
+	//m_disk.detect_device_type();
+
+	//m_disk.Init(false, true);
+	//m_disk.detect_device_type();
+
+	//m_disk.Init(false, false);
+	//m_disk.detect_device_type();
 
 	return true;
 }
 
+bool   SYSTEM::alloc_stack()
+{
+	m_stack_base = m_kmem.alloc_virtual_memory(SYSTEM_STACK_SIZE + 2*PAGE_SIZE);
+	m_stack_top = m_stack_base + SYSTEM_STACK_SIZE;
+
+	//设置底部隔离区
+	m_kmem.free_virtual_memory(m_stack_base, PAGE_SIZE);
+	m_kmem.reserve_virtual_space(m_stack_base, PAGE_SIZE);
+	m_stack_base += PAGE_SIZE;
+
+	//设置顶部隔离区
+	m_stack_top -= PAGE_SIZE;
+	m_kmem.free_virtual_memory(m_stack_top, PAGE_SIZE);
+	m_kmem.reserve_virtual_space(m_stack_top, PAGE_SIZE);
+
+	printf("sys_stack_base=%08X sys_stack_top=%08X\n", m_stack_base, m_stack_top);
+	return true;
+}
+
+uint32  SYSTEM::get_stack()
+{
+	return m_stack_top;
+}
+
 bool   SYSTEM::init_kernel_mmu()
 {
-#define PAGE_DIR_LOW1M_FARMES	1	//页目录占用1页
-#define PAGE_TABLE_LOW1M_FRAMES	1   //0-4M低端内存映射页表占用1页
-#define PAGE_TABLE_KERNEL_FRAMES	((m_kernel_image_size+ MB(4)-1)/MB(4))//内核页表，每4M占用1页
-#define KERNEL_FRAMES   SIZE_TO_PAGES(m_kernel_image_size) //内核实际占用页数
-
-	uint32 page_frame_used = SIZE_TO_PAGES(MB(1))
-		+ PAGE_DIR_LOW1M_FARMES
-		+ PAGE_TABLE_LOW1M_FRAMES
-		+ PAGE_TABLE_KERNEL_FRAMES
-		+ KERNEL_FRAMES;
-
-	PAGE_FRAME_DB::Init(page_frame_used, &m_meminfo);
-
 	//m_kmem.Init();
 	m_kmem.reserve_virtual_space(PAGE_TABLE_BASE, MB(4));
 	m_kmem.reserve_virtual_space(PAGE_FRAME_BASE, MB(1));

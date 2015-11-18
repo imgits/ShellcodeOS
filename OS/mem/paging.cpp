@@ -1,5 +1,4 @@
 #include "paging.h"
-#include "page_frame.h"
 #include <string.h>
 #include <stdio.h>
 #include "kernel.h"
@@ -53,13 +52,13 @@ void PAGER::rebuild_os_page_table()
 	MAP_PAGE中添加__asm  invlpg page_va指令，问题解决，教训十分深刻
 	*/
 
-	//建立自映射野目录
+	//建立自映射页目录
 	uint32 new_page_dir = alloc_physical_page();
 	MAP_PAGE(new_page_dir, tmp_page_dir);
 	memset(tmp_page_dir, 0, PAGE_SIZE);
 	tmp_page_dir[PDE_INDEX(PAGE_TABLE_BASE)] = new_page_dir | PT_PRESENT | PT_WRITABLE;
 	
-	//映射0-1M内存空间
+	//映射0-1M物理内存空间==>0-1M
 	uint32 new_page_table = alloc_physical_page();
 	MAP_PAGE(new_page_table, tmp_page_table);
 	memset(tmp_page_table, 0, PAGE_SIZE);
@@ -86,9 +85,14 @@ void PAGER::rebuild_os_page_table()
 		tmp_page_table[PTE_INDEX(virtual_address)] = physcial_address | PT_PRESENT | PT_WRITABLE;
 	}
 
+	//重置页目录寄存器CR3
 	__asm cli
 	__asm mov eax, new_page_dir
 	__asm mov CR3, eax
+
+	//映射0-1M物理内存空间==>PAGE_LOW1M_BASE (1M)
+	//此时新的页目录表已经生效，所以可以直接调用map_pages函数
+	map_pages(0, PAGE_LOW1M_BASE, MB(1));
 }
 
 void PAGER::create_page_frame_db()
@@ -191,7 +195,7 @@ uint32 PAGER::alloc_physical_pages(uint32 pages)
 			{
 				if (m_page_frame_database[j] != PAGE_FRAME_FREE) break;
 			}
-			if (j = i + pages)
+			if (j == i + pages)
 			{
 				m_next_free_page_frame = j;
 				return i*PAGE_SIZE;
@@ -224,25 +228,25 @@ uint32 PAGER::get_mem_info()
 		uint64 length = meminfo.mem_maps[i].length;
 		uint64 begin = meminfo.mem_maps[i].base_addr;
 		uint64 end = begin + length;
-		printf("%d %08X-%08X %08X-%08X %08X-%08X %d ",
-			i,
-			(uint32)(begin >> 32), (uint32)(begin & 0xffffffff),
-			(uint32)(end >> 32), (uint32)(end & 0xffffffff),
-			(uint32)(length >> 32), (uint32)(length & 0xffffffff),
-			meminfo.mem_maps[i].type);
+		//printf("%d %08X-%08X %08X-%08X %08X-%08X %d ",
+		//	i,
+		//	(uint32)(begin >> 32), (uint32)(begin & 0xffffffff),
+		//	(uint32)(end >> 32), (uint32)(end & 0xffffffff),
+		//	(uint32)(length >> 32), (uint32)(length & 0xffffffff),
+		//	meminfo.mem_maps[i].type);
 		switch (meminfo.mem_maps[i].type)
 		{
 		case MEMTYPE_RAM:
-			printf("RAM\n");
+			//printf("RAM\n");
 			if (ram_size < end && end < 0x100000000I64)
 			{
 				ram_size = end;
 			}
 			break;
-		case MEMTYPE_RESERVED: printf("RESERVED\n"); break;
-		case MEMTYPE_ACPI: printf("ACPI\n"); break;
-		case MEMTYPE_NVS: printf("NVS\n"); break;
-		default:	printf("\n"); break;
+		case MEMTYPE_RESERVED:  break;
+		case MEMTYPE_ACPI:  break;
+		case MEMTYPE_NVS:  break;
+		default:	 break;
 		}
 	}
 	memcpy(&m_meminfo,&meminfo,sizeof(meminfo));
@@ -268,9 +272,7 @@ uint32* PAGER::new_page_dir()
 
 uint32 PAGER::new_page_table(uint32 virtual_address)
 {
-	CHECK_PAGE_ALGINED(virtual_address);
-
-	uint32  page_table_PA = PAGE_FRAME_DB::alloc_physical_page();
+	uint32  page_table_PA = alloc_physical_page();
 	uint32  val = page_table_PA | PT_PRESENT | PT_WRITABLE;
 	if (USER_SPACE(virtual_address)) val |= PT_USER;
 	SET_PDE(virtual_address, val);
@@ -301,11 +303,7 @@ void PAGER::unmap_pages(uint32 virtual_address, int size)
 	for (uint32 i = 0; i < pages; i++)
 	{
 		uint32 va = virtual_address + i * PAGE_SIZE;
-		uint32 pd_index = PDE_INDEX(va);
-		uint32 pt_index = PTE_INDEX(va);
-		uint32* page_table_VA = (uint32*)(PAGE_TABLE_BASE + (pd_index * PAGE_SIZE));
-		uint32 pde = GET_PDE(va);
-		if (pde != 0)
+		if (GET_PDE(va) != 0)
 		{
 			uint32 page = GET_PTE(va)>>12;
 			SET_PTE(va, 0);
@@ -322,8 +320,6 @@ uint32 PAGER::new_page_table(uint32* page_dir, uint32 virtual_address)
 	page_dir[virtual_address>>22] = val;
 	return page_table_PA;
 }
-
-
 
 uint32 PAGER::map_pages(uint32* page_dir, uint32 physical_address, uint32 virtual_address, int size, int protect)
 {

@@ -1,13 +1,22 @@
 #include "rtc.h"
 #include "vga.h"
 #include "stdio.h"
+#include "kernel.h"
+
+static RTC	rtc;
 
 RTC::RTC()
 {
+	printf("RTC::RTC()\n");
 	m_clock_ticks = 0;
 }
 
 bool    RTC::Init(IDT *idt)
+{
+	return rtc._Init(idt);
+}
+
+bool    RTC::_Init(IDT *idt)
 {
 	//设置和时钟中断相关的硬件 
 	//outportb(0x70, 0x0b | 0x80); // RTC寄存器B | 阻断NMI
@@ -20,7 +29,7 @@ bool    RTC::Init(IDT *idt)
 	outportb(0x70, 0x8B);			// set the index again (a read will reset the index to register D)
 	outportb(0x71, prev | 0x40);	// write the previous value ORed with 0x40. This turns on bit 6 of register B
 
-	byte rate = 12;				// rate must be above 2 and not over 15
+	byte rate = 8;				// rate must be above 2 and not over 15
 								//frequency =  32768 >> (rate-1);
 
 	outportb(0x70, 0x8A);			// set index to register A, disable NMI

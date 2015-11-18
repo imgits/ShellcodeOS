@@ -107,6 +107,9 @@
     <ClInclude Include="pe_file.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="io.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="intrin.asm">

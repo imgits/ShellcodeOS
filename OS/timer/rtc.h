@@ -10,7 +10,11 @@ private:
 	uint64 m_clock_ticks;
 public:
 	RTC();
-	bool    Init(IDT *idt);
+	static	bool	Init(IDT *idt);
 	virtual void	int_handler(INT_CONTEXT* context);
+
+private:
+	bool			_Init(IDT *idt);
+
 };
 

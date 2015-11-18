@@ -263,7 +263,7 @@ void TRAP::handler14(TRAP_CONTEXT* context)
 		case 1://系统级 读 违反页面保护权限
 		case 2://系统级 写 不存在的页面
 		case 3://系统级 写 违反页面保护权限
-			printf("Kernel page default: errorcode=%08X CR2=%08X CS:EIP=%04X:%08X\n", errcode, virt_addr, context->cs, context->eip);
+			printf("Kernel page default: errorcode=%08X CR2=%08X ESP=%08X CS:EIP=%04X:%08X\n", errcode, virt_addr, context->esp, context->cs, context->eip);
 			__asm hlt //停机
 			break;
 		case 4://用户级 读 不存在的页面

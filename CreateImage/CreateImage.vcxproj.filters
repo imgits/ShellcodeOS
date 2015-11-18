@@ -35,5 +35,8 @@
     <ClCompile Include="CreateImage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\OS\dlmalloc.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

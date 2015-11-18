@@ -1,6 +1,6 @@
 #pragma once
 #include "typedef.h"
-#include "ioport.h"
+#include "io.h"
 
 #define		VGA_BUFFER_ADDRESS (0x000b8000) 
 #define		VGA_WIDTH		   80

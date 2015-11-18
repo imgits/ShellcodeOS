@@ -2,7 +2,7 @@
 #include "typedef.h"
 
 #define   PAGE_SIZE						0x1000
-#define   PAGE_SIZE_BITS					12
+#define   PAGE_SIZE_BITS				12
 
 #define   PDE_INDEX(virtual_addr)			((virtual_addr>>22))
 #define   PTE_INDEX(virtual_addr)			((virtual_addr>>12)&0x3FF)
@@ -17,9 +17,8 @@
 #define   KERNEL_BASE						0x80000000
 #define   PAGE_TABLE_BASE					0xC0000000
 #define   PAGE_DIR_BASE						0xC0300000 //=(0xC0000000 + (0xC0000000>>12))
-#define   PT_BASE(virtual_addr)			(PAGE_TABLE_BASE + PD_INDEX(virtual_addr)* PAGE_SIZE)
-#define   PTE(virtual_addr)			    (PAGE_TABLE_BASE + (virtual_addr>>12))
-#define   PAGE_TMP_BASE                  0x80000000
+#define   PT_BASE(virtual_addr)				(PAGE_TABLE_BASE + PD_INDEX(virtual_addr)* PAGE_SIZE)
+#define   PTE(virtual_addr)					(PAGE_TABLE_BASE + (virtual_addr>>12))
 
 #define     GET_PDE(addr)  ((uint32*)PAGE_DIR_BASE)[(uint32)(addr)>>22]
 #define     GET_PTE(addr)  ((uint32*)PAGE_TABLE_BASE)[(uint32)(addr)>>12]
@@ -47,6 +46,25 @@
 #define		PT_DIRTY     0x040
 
 
+#define   PAGE_FRAME_FREE					0
+#define   PAGE_FRAME_LOW1M					1
+#define   PAGE_FRAME_USER					2
+#define   PAGE_FRAME_KERNEL					3
+#define   PAGE_FRAME_ACPI					4
+#define   PAGE_FRAME_NVS					5
+#define   PAGE_FRAME_RESERVED				6
+#define   PAGE_FRAME_NONE					0xff
+
+#define KB(x)                    ((uint32)x<<10)
+#define MB(x)                    ((uint32)x<<20)
+#define GB(x)                    ((uint32)x<<30)
+
+#define PAGES_TO_SIZE(pages)	 ((uint32)(pages)<<12)
+#define SIZE_TO_PAGES(size)      (((uint32)(size) + PAGE_SIZE -1)>>12)
+
+#define USER_SPACE(addr)       (((uint32)addr) < KERNEL_BASE)
+#define KERNEL_SPACE(addr)     (((uint32)addr) >= KERNEL_BASE)
+
 #define MAX_MEM_MAP		32
 
 struct  memory_map
@@ -57,7 +75,7 @@ struct  memory_map
 };
 struct memory_info
 {
-	uint32	  map_count;
+	uint32	   map_count;
 	memory_map mem_maps[MAX_MEM_MAP];
 };
 
@@ -75,7 +93,7 @@ private:
 	static memory_info m_meminfo;
 public:
 	PAGER();
-	static bool	Init(uint32 kernel_image_size);
+	static bool		Init(uint32 kernel_image_size);
 	static uint32	alloc_physical_page();
 	static uint32	alloc_physical_pages(uint32 pages);
 	static void		free_physical_page(uint32 page);

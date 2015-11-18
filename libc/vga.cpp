@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include "typedef.h"
 #include "vga.h"
-#include "ioport.h"
+#include "io.h"
 
 uint16* VIDEO::m_video_buf = (uint16*)VGA_BUFFER_ADDRESS;
 uint32  VIDEO::m_cursor_x = 0;

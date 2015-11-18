@@ -3,7 +3,7 @@
 
 #pragma once
 #include "IDT.h"
-#include "ioport.h"
+#include "io.h"
 
 #define	PIC1_INT0				0x20
 #define	PIC2_INT0				0x28

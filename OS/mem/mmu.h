@@ -1,5 +1,5 @@
 #pragma once
-#include "page_frame.h"
+#include "paging.h"
 #include <stdio.h>
 #include "kernel.h"
 
@@ -32,7 +32,7 @@ private:
 				{
 					if (m_block_map[i] != MMU_BLOCK_FREE) break;
 				}
-				if (j = i + blocks)
+				if (j == i + blocks)
 				{
 					return i;
 				}
@@ -140,7 +140,7 @@ public:
 		uint32 virtual_addr = alloc_virtual_space(size);
 		if (virtual_addr == 0) return 0;
 		uint32 pages = size >> 12;
-		uint32 phys_addr = PAGE_FRAME_DB::alloc_physical_pages(pages);
+		uint32 phys_addr = PAGER::alloc_physical_pages(pages);
 		return PAGER::map_pages(phys_addr, virtual_addr, size, protect);
 	}
 

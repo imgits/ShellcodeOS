@@ -1,6 +1,7 @@
 #include "8253.h"
 #include <string.h>
 #include "vga.h"
+#include <stdio.h>
 
 uint32 PIT::m_counter = 0;
 uint64 PIT::m_timer = 0;

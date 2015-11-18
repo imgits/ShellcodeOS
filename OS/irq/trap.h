@@ -2,6 +2,7 @@
 #include  "typedef.h"
 #include  "idt.h"
 #include  "gdt.h"
+#include  "int_handler.h"
 
 #pragma pack(push, 1)
 struct TRAP_CONTEXT
@@ -17,7 +18,7 @@ struct TRAP_CONTEXT
 
 typedef void (*TRAP_HANDLER)(TRAP_CONTEXT* context);
 
-class TRAP
+class TRAP //: public INT_HANDLER
 {
 private:
 	static TRAP_HANDLER m_handlers[MAX_TRAP_ENTRIES];
@@ -45,5 +46,8 @@ public:
 	static void handler17(TRAP_CONTEXT* context);
 	static void handler18(TRAP_CONTEXT* context);
 	static void handler19(TRAP_CONTEXT* context);
+private:
+	bool   _Init(IDT* idt);
+
 };
 

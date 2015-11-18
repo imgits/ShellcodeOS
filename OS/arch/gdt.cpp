@@ -17,8 +17,6 @@ GDT::~GDT()
 void GDT::Init()
 {
 	__asm cli
-	// setup a new gdt
-	/* 但这里有必要再做一次这个工作，便于管理。 */
 
 	// 初始化一个代码段和一个数据段，内核态的线程使用
 	set_gdt_entry(GDT_KERNEL_CODE, 0x00000000, 0x000FFFFF, DA_CR  | DA_32 | DA_DPL0 | DA_LIMIT_4K); //
@@ -33,7 +31,7 @@ void GDT::Init()
 
 	for (int i = 0; i < 8; i++)
 	{
-		printf("GDT[%d]: %016llX\n", i, *(uint64*)&m_gdt[i]);
+		//printf("GDT[%d]: %016llX\n", i, *(uint64*)&m_gdt[i]);
 	}
 	GDTR gdtr;
 
