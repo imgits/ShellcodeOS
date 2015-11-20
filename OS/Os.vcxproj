@@ -63,7 +63,7 @@
       <SDLCheck>true</SDLCheck>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>.;arch;timer;irq;mem;../libc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;arch;timer;irq;mem;pci;../libc;</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <PreprocessorDefinitions>_X86_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
@@ -119,7 +119,7 @@
     <ClCompile Include="main.cpp" />
     <None Include="dlmalloc.c" />
     <ClCompile Include="mem\mmu.cpp" />
-    <ClCompile Include="pci.cpp" />
+    <ClCompile Include="pci\pci.cpp" />
     <ClCompile Include="irq\8259.cpp" />
     <ClCompile Include="arch\tss.cpp" />
     <ClCompile Include="win32.cpp" />
@@ -142,6 +142,7 @@
     <ClInclude Include="mem\malloc.h" />
     <ClInclude Include="mem\paging.h" />
     <ClInclude Include="object.h" />
+    <ClInclude Include="pci\pci_ids.h" />
     <ClInclude Include="process.h" />
     <ClInclude Include="syscall.h" />
     <ClInclude Include="system.h" />
@@ -157,7 +158,7 @@
     <ClInclude Include="kernel.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="mem\mmu.h" />
-    <ClInclude Include="pci.h" />
+    <ClInclude Include="pci\pci.h" />
     <ClInclude Include="irq\8259.h" />
     <ClInclude Include="arch\tss.h" />
     <ClInclude Include="win32.h" />

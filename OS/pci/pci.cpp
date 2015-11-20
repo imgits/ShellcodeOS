@@ -2,6 +2,7 @@
 #include "io.h"
 #include "stdio.h"
 #include "list.h"
+#include "pci_ids.h"
 
 static LIST<DEVICE> sys_devices;
 
@@ -82,16 +83,30 @@ void PCI::scan_devices()
 		{
 			for (uint32_t function = 0; function < 8; function++)
 			{
+				//根据配置空间的第0个寄存器是否返回0FFFFH值来判断是否存在该PCI设备
 				uint32_t vendor = getVendorID(bus, slot, function);
 				if (vendor == 0xffff) break;
-			
 				uint32_t device = getDeviceID(bus, slot, function);
-				uint32_t Class= getBaseClass(bus, slot, function);
-				uint32_t Subclass = getSubClass(bus, slot, function);
-				printf("%d %02X:%02X:%X vendor: %x device: %x class: %x subclass: %x \n", 
-					device_count++, bus, slot,function, vendor, device, Class, Subclass);
+				uint32_t baseclass = getBaseClass(bus, slot, function);
+				uint32_t subclass = getSubClass(bus, slot, function);
+				uint32_t progif = getProgIF(bus, slot, function);
+
+				PCI_IDS* pci_ids = get_device_ids(vendor, device, 0, 0);
+				PCI_DEVICE_CLASS* pci_class = get_device_class(baseclass, subclass, progif);
+				if (pci_ids != NULL)
+				{
+					printf("%d %02X:%02X:%X vendor: %s device: %s\n",
+						device_count++, bus, slot, function, pci_ids->vendor_name, pci_ids->device_name);
+				}
+				else
+				{
+					printf("%d %02X:%02X:%X vendor: %x device: %x class: %x subclass: %x \n",
+						device_count++, bus, slot, function, vendor, device, baseclass, subclass);
+				}
+				
+
 				uint32_t header_type = getHeaderType(bus, slot, function);
-				if (header_type & 0x80 == 0) break;
+				if ( (header_type & 0x80) == 0) break;
 
 				/*pci_device *pdev = (pci_device *)malloc(sizeof(pci_device));
 				pdev->vendor = vendor;

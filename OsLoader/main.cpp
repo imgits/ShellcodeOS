@@ -18,6 +18,8 @@ void	main(byte boot_drive)
 	PE_FILE kernel_file;
 	kernel_file.open(boot_drive, os_kernel_filename);
 	uint32 kernel_image_size = kernel_file.image_size();
+	printf("kernel_image_size=%08X\n", kernel_image_size);
+	
 	char * kernel_buf = (char*)KERNEL_BASE;
 	kernel_file.load(kernel_buf, kernel_image_size);
 

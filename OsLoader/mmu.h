@@ -67,6 +67,26 @@ static void    map_pages_within_4M(uint32* page_dir, uint32* page_table, uint32 
 	}
 }
 
+//在以4M为边界的4M范围内映射内存地址空间
+static void    map_pages(uint32* page_dir, uint32* page_table, uint32 physcail_address, uint32 virtual_address, uint32 size)
+{
+	memset(page_table, 0, PAGE_SIZE);
+	page_dir[PDE_INDEX(virtual_address)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+
+	uint32 pages =  size >> 12;
+	for (int i = 0; i < pages; i++, physcail_address+=PAGE_SIZE, virtual_address+=PAGE_SIZE)
+	{
+		uint32 pde = page_dir[PDE_INDEX(virtual_address)];
+		if (pde == NULL)
+		{
+			page_table = (uint32*)((uint32)page_table + PAGE_SIZE);//分配下一个物理页
+			memset(page_table, 0, PAGE_SIZE);
+			page_dir[PDE_INDEX(virtual_address)] = (uint32)page_table | PT_PRESENT | PT_WRITABLE;
+		}
+		page_table[PTE_INDEX(virtual_address)] = physcail_address | PT_PRESENT | PT_WRITABLE;
+	}
+}
+
 static void	startup_page_mode()
 {
 	uint32* page_dir = (uint32*)PAGE_DIR_PA;
@@ -80,7 +100,7 @@ static void	startup_page_mode()
 
 	//映射物理内存00100000-004FFFFF至虚拟地址空间80000000-803FFFFF
 	//OsLoader假定OS kernel大小超过4M
-	map_pages_within_4M(page_dir, (uint32*)PT_KERNEL_PA, KERNEL_START_PA, KERNEL_BASE, MB(4));
+	map_pages(page_dir, (uint32*)PT_KERNEL_PA, KERNEL_START_PA, KERNEL_BASE, MB(8));
 
 	__asm mov		eax, dword ptr[page_dir]
 	__asm mov		cr3, eax

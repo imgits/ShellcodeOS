@@ -1,6 +1,6 @@
 //http://wiki.osdev.org/PCI
 //https://msdn.microsoft.com/en-us/library/ms903537.aspx
-
+//pci Ñ§Ï°±Ê¼Ç:http://blog.chinaunix.net/uid-618506-id-204331.html
 #pragma once
 #include "typedef.h"
 #include <stdint.h>
@@ -23,7 +23,7 @@
 #define getHeaderType(bus, device, function)	read_byte(bus, device, function, 0x0E)
 #define getBIST(bus, device, function)			read_byte(bus, device, function, 0x0F)
 
-enum PCI_DEVICE_CLASS
+enum PCI_DEVICE_CLASS1
 {
 	VGA_DEVICE=0,//VGA-Compatible Device
 	MASS_STORAGE_DEVICE=1,//Mass Storage Controller

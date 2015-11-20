@@ -82,6 +82,8 @@ void copy_file(char* fromfile, char* tofile)
 {
 	FILE* fpfrom = fopen(fromfile, "rb");
 	FILE* fpto = fopen(tofile, "wb");
+	if (fpfrom==NULL) exit_error("打开文件%s 失败\n", fromfile);
+	if (fpto == NULL) exit_error("创建文件%s 失败\n", tofile);
 	fseek(fpfrom, 0, SEEK_END);
 	int fsize = ftell(fpfrom);
 	rewind(fpfrom);

@@ -71,17 +71,25 @@ void PAGER::rebuild_os_page_table()
 	}
 
 	//Ó³ÉäÄÚºË¿Õ¼ä(¼ÙÉèkernel_image_size<=4M)
-	new_page_table = alloc_physical_page();
-	MAP_PAGE(new_page_table, tmp_page_table);
-	memset(tmp_page_table, 0, PAGE_SIZE);
+	//new_page_table = alloc_physical_page();
+	//MAP_PAGE(new_page_table, tmp_page_table);
+	//memset(tmp_page_table, 0, PAGE_SIZE);
 
 	virtual_address = KERNEL_BASE;
-	tmp_page_dir[PDE_INDEX(virtual_address)] = new_page_table | PT_PRESENT | PT_WRITABLE;
+	//tmp_page_dir[PDE_INDEX(virtual_address)] = new_page_table | PT_PRESENT | PT_WRITABLE;
 
 	uint32 physcial_address = KERNEL_START_PA;
 	uint32 kernel_pages = SIZE_TO_PAGES(m_kernel_image_size);
 	for (int i = 0; i < kernel_pages; i++, virtual_address += PAGE_SIZE, physcial_address += PAGE_SIZE)
 	{
+		uint32 pde = tmp_page_dir[PDE_INDEX(virtual_address)];
+		if (pde == 0)
+		{
+			new_page_table = alloc_physical_page();
+			MAP_PAGE(new_page_table, tmp_page_table);
+			memset(tmp_page_table, 0, PAGE_SIZE);
+			tmp_page_dir[PDE_INDEX(virtual_address)] = new_page_table | PT_PRESENT | PT_WRITABLE;
+		}
 		tmp_page_table[PTE_INDEX(virtual_address)] = physcial_address | PT_PRESENT | PT_WRITABLE;
 	}
 
