@@ -95,16 +95,14 @@ void PCI::scan_devices()
 				PCI_DEVICE_CLASS* pci_class = get_device_class(baseclass, subclass, progif);
 				if (pci_ids != NULL)
 				{
-					printf("%d %02X:%02X:%X vendor: %s device: %s\n",
-						device_count++, bus, slot, function, pci_ids->vendor_name, pci_ids->device_name);
+					printf("%d %02X:%02X:%X device: %s\n",
+						device_count++, bus, slot, function, pci_ids->device_name);
 				}
 				else
 				{
 					printf("%d %02X:%02X:%X vendor: %x device: %x class: %x subclass: %x \n",
 						device_count++, bus, slot, function, vendor, device, baseclass, subclass);
 				}
-				
-
 				uint32_t header_type = getHeaderType(bus, slot, function);
 				if ( (header_type & 0x80) == 0) break;
 
