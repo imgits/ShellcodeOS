@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OS", "OS\Os.vcxproj", "{49A
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcidatabase", "pcidatabase\pcidatabase.vcxproj", "{7695F6DA-8C89-42F1-B8E5-A738FE16E734}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VhdCopy", "VhdCopy\VhdCopy.vcxproj", "{E9900F5E-2C30-408C-9A01-63980F318D47}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -67,6 +69,14 @@ Global
 		{7695F6DA-8C89-42F1-B8E5-A738FE16E734}.Release|Win32.Build.0 = Release|Win32
 		{7695F6DA-8C89-42F1-B8E5-A738FE16E734}.Release|x64.ActiveCfg = Release|x64
 		{7695F6DA-8C89-42F1-B8E5-A738FE16E734}.Release|x64.Build.0 = Release|x64
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Debug|Win32.Build.0 = Debug|Win32
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Debug|x64.ActiveCfg = Debug|x64
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Debug|x64.Build.0 = Debug|x64
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|Win32.ActiveCfg = Release|Win32
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|Win32.Build.0 = Release|Win32
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|x64.ActiveCfg = Release|x64
+		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

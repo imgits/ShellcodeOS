@@ -156,12 +156,19 @@ int _tmain(int argc, _TCHAR* argv[])
 #define  PDP_BASE   0xFFFFF6FB7DA00000
 #define  PD_BASE    0xFFFFF6FB40000000
 #define  PT_BASE    0xFFFFF68000000000
+	//PML2[7 470   0] = 000003F580000083 2M
+	//PML2[  7 475 431 ]=000003F6F5E00083 2M
+	uint64_t addr = 0x000003F6F5E00083;
 	uint64_t max_mem = 0x0000FFFFFFFFFFFF;
 	uint64_t max_pages = (max_mem >> 12);
 	uint64_t PT_END = PT_BASE + max_pages * 8;
 	printf("PT_END=%0I64X\n", PT_END);
-
-	dlmalloc(1024);
+	printf("%d %d %d %d\n",
+		(int)((addr >> 39) & 0x1ff),
+		(int)((addr >> 30) & 0x1ff),
+		(int)((addr >> 21) & 0x1ff),
+		(int)((addr >> 12) & 0x1ff));
+	//dlmalloc(1024);
 	VirtualDisk vhd;
 	if (vhd.Open(argv[1]))
 	{

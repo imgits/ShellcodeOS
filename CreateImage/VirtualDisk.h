@@ -14,13 +14,19 @@
 
 class VirtualDisk
 {
+private:
 	HANDLE m_hVHD;
 	WCHAR  m_PhysicalDiskPath[PHYS_PATH_LEN];
-
+	char   m_VolumesBeforeAttach[32 * 4];
+	char   m_VolumesAfterAttach[32 * 4];
+	char   m_AttachedVolumeName;
 public:
 	VirtualDisk()
 	{
 		m_hVHD = INVALID_HANDLE_VALUE;
+		m_AttachedVolumeName = 0;
+		memset(m_VolumesBeforeAttach, 0, sizeof(m_VolumesBeforeAttach));
+		memset(m_VolumesAfterAttach, 0, sizeof(m_VolumesAfterAttach));
 	}
 
 	~VirtualDisk()
@@ -104,18 +110,67 @@ public:
 		}
 	}
 
+	void ClearVolumeInfo()
+	{
+		m_AttachedVolumeName = 0;
+		memset(m_VolumesBeforeAttach, 0, sizeof(m_VolumesBeforeAttach));
+		memset(m_VolumesAfterAttach, 0, sizeof(m_VolumesAfterAttach));
+	}
+
 	bool Attach()
 	{
 		assert(INVALID_HANDLE_VALUE != m_hVHD);
+		Detach();
+		ClearVolumeInfo();
+		int len0 = EnumVolumes(m_VolumesBeforeAttach, sizeof(m_VolumesBeforeAttach));
 		ATTACH_VIRTUAL_DISK_PARAMETERS iparams;
 		iparams.Version = ATTACH_VIRTUAL_DISK_VERSION_1;
 		DWORD ret = AttachVirtualDisk(m_hVHD, NULL,
 			//ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER |
 			ATTACH_VIRTUAL_DISK_FLAG_PERMANENT_LIFETIME, 
 			0, &iparams, NULL);
-		if (ret == ERROR_SUCCESS) return true;
-		PrintErrorMessage(ret);
-		return false;
+		if (ret != ERROR_SUCCESS)
+		{
+			ClearVolumeInfo();
+			PrintErrorMessage(ret);
+			return false;
+		}
+		int retries = 0;
+		int len1 = EnumVolumes(m_VolumesAfterAttach, sizeof(m_VolumesAfterAttach));
+		while(len0 >= len1)
+		{
+			if (retries++ >= 50) return false;
+			Sleep(100);
+			len1 = EnumVolumes(m_VolumesAfterAttach, sizeof(m_VolumesAfterAttach));
+		}
+		if (len1 > len0)
+		{
+			for (int i = 0; i < len1; i++)
+			{
+				if (m_VolumesBeforeAttach[i] != m_VolumesAfterAttach[i])
+				{
+					m_AttachedVolumeName = m_VolumesAfterAttach[i];
+					break;
+				}
+			}
+		}
+		return true;
+	}
+
+	int  EnumVolumes(char* Volumes, int size)
+	{
+		memset(Volumes, 0, size);
+
+		DWORD len = GetLogicalDriveStrings(size - 1, Volumes);
+		if (len == 0)  return 0;
+		char* vol = Volumes;
+		int count = 0;
+		while (*vol)
+		{
+			//printf("%d %s\n", count++, vol);
+			vol += strlen(vol) + 1;
+		}
+		return len;
 	}
 
 	//http://stackoverflow.com/questions/24396644/programmatically-mount-a-microsoft-virtual-hard-drive-vhd
@@ -145,9 +200,18 @@ public:
 	{
 		assert(INVALID_HANDLE_VALUE != m_hVHD);
 		DWORD ret = DetachVirtualDisk(m_hVHD, DETACH_VIRTUAL_DISK_FLAG_NONE, 0);
-		if (ret == ERROR_SUCCESS) return true;
+		if (ret == ERROR_SUCCESS)
+		{
+			ClearVolumeInfo();
+			return true;
+		}
 		//PrintErrorMessage(ret);
 		return false;
+	}
+
+	char AttachedVolumeName()
+	{
+		return m_AttachedVolumeName;
 	}
 
 	WCHAR* GetPhysicalPath()
