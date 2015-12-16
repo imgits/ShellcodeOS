@@ -5,6 +5,7 @@
 // and you can't use a lot of stuff in your constructors!
 //tp://wiki.osdev.org/Visual_C++_Runtime
 bool CppInit();
+int __cdecl _purecall();
 
 void* __cdecl operator new(size_t size);
 void* __cdecl operator new[](size_t size);
