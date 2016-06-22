@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CreateImage", "CreateImage\CreateImage.vcxproj", "{0E26D89F-7060-41EF-AAFA-2200F71812F2}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -22,6 +22,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcidatabase", "pcidatabase\pcidatabase.vcxproj", "{7695F6DA-8C89-42F1-B8E5-A738FE16E734}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VhdCopy", "VhdCopy\VhdCopy.vcxproj", "{E9900F5E-2C30-408C-9A01-63980F318D47}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VhdMount", "VhdMount\VhdMount.vcxproj", "{AFC3514D-60EB-4513-8CC8-AA542C239188}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Multiboot", "Multiboot\Multiboot.vcxproj", "{085BFDC9-B964-40C8-8516-14E2FD09E21C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultibootPE", "MultibootPE\MultibootPE.vcxproj", "{0545B807-5FFC-4CF3-84A0-605D3E29200F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +83,30 @@ Global
 		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|Win32.Build.0 = Release|Win32
 		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|x64.ActiveCfg = Release|x64
 		{E9900F5E-2C30-408C-9A01-63980F318D47}.Release|x64.Build.0 = Release|x64
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Debug|Win32.Build.0 = Debug|Win32
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Debug|x64.ActiveCfg = Debug|x64
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Debug|x64.Build.0 = Debug|x64
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Release|Win32.ActiveCfg = Release|Win32
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Release|Win32.Build.0 = Release|Win32
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Release|x64.ActiveCfg = Release|x64
+		{AFC3514D-60EB-4513-8CC8-AA542C239188}.Release|x64.Build.0 = Release|x64
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Debug|Win32.Build.0 = Debug|Win32
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Debug|x64.ActiveCfg = Debug|x64
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Debug|x64.Build.0 = Debug|x64
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Release|Win32.ActiveCfg = Release|Win32
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Release|Win32.Build.0 = Release|Win32
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Release|x64.ActiveCfg = Release|x64
+		{085BFDC9-B964-40C8-8516-14E2FD09E21C}.Release|x64.Build.0 = Release|x64
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Debug|Win32.Build.0 = Debug|Win32
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Debug|x64.ActiveCfg = Debug|x64
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Debug|x64.Build.0 = Debug|x64
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Release|Win32.ActiveCfg = Release|Win32
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Release|Win32.Build.0 = Release|Win32
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Release|x64.ActiveCfg = Release|x64
+		{0545B807-5FFC-4CF3-84A0-605D3E29200F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

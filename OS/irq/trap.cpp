@@ -157,7 +157,6 @@ void TRAP::register_handler(int irq_no, TRAP_HANDLER handler)
 	{
 		TRAP::m_handlers[irq_no] = handler;
 	}
-
 }
 
 //³ý·¨´íÎó 
